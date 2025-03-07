@@ -1921,9 +1921,9 @@ dependencies = [
 
 [[package]]
 name = "lassie"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1055f514b3ada8f216fd275b0122b41de3feedb0102bad92d1f1874c77609549"
+checksum = "45dd0b97927a2c55be0d9db751df4423f64bbad72f0d3e3b41ba405bd4338f21"
 dependencies = [
  "cc",
  "log",
