@@ -12,6 +12,7 @@ concurrency:
 
 env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 2 # Fail cache download after 2 minutes.
+  RUST_VERSION: '1.85'
 
 jobs:
   build:
@@ -38,7 +39,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
         with:
-          toolchain: 1.77
+          toolchain: ${{ env.RUST_VERSION }}
           target: ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
@@ -76,7 +77,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
         with:
-          toolchain: 1.77
+          toolchain: ${{ env.RUST_VERSION }}
           target: ${{ matrix.target }}
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
@@ -117,7 +118,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
         with:
-          toolchain: 1.77
+          toolchain: ${{ env.RUST_VERSION }}
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
         with:
@@ -135,7 +136,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
         with:
-          toolchain: 1.77
+          toolchain: ${{ env.RUST_VERSION }}
           components: clippy
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
@@ -159,7 +160,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
         with:
-          toolchain: 1.77
+          toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt
 
       - name: Check formatting
