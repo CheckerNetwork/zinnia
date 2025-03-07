@@ -280,7 +280,6 @@ impl EventLoop {
                 }
 
                 RequestResponseEvent::Message {
-                    peer: _,
                     message:
                         RequestResponseMessage::Response {
                             request_id,

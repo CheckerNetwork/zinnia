@@ -67,8 +67,6 @@ pub enum RequestResponseMessage {
 pub enum RequestResponseEvent {
     /// An incoming message (request or response).
     Message {
-        /// The peer who sent the message.
-        peer: PeerId,
         /// The incoming message.
         message: RequestResponseMessage,
     },
@@ -575,7 +573,7 @@ impl NetworkBehaviour for RequestResponse {
                     response,
                 };
                 self.pending_events.push_back(ToSwarm::GenerateEvent(
-                    RequestResponseEvent::Message { peer, message },
+                    RequestResponseEvent::Message { message },
                 ));
             }
             RequestResponseHandlerEvent::OutboundTimeout(request_id) => {

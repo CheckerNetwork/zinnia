@@ -73,6 +73,7 @@ pub fn it_removes_lassie_temp_on_start() {
     // Note: on Unix, this sends SIGKILL signal which allows the process to shutdown gracefully
     // If we ever implement graceful shutdown for Lassie, then we may need to rework this line.
     child.kill().expect("cannot stop zinniad");
+    child.wait().expect("cannot wait for child to finish");
 
     // Read the rest of stdout, ensure the retrieval was interrupted and did not finish yet
     assert!(
@@ -109,6 +110,7 @@ pub fn it_removes_lassie_temp_on_start() {
     // Note: on Unix, this sends SIGKILL signal which allows the process to shutdown gracefully
     // If we ever implement graceful shutdown for Lassie, then we may need to rework this line.
     child.kill().expect("cannot stop zinniad");
+    child.wait().expect("cannot wait for child to finish");
 
     // Check that all temp files from the previous run were deleted
     let found: Vec<_> = read_dir(cache_root.join("lassie"))
