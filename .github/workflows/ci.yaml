@@ -53,20 +53,20 @@ jobs:
       - run: cargo build --workspace --all-features --all-targets --target=${{ matrix.target }}
 
   test:
-    name: Test on ${{ matrix.target }} ${{ matrix.release-mode && '(release)' || '(debug)' }}
-    runs-on: ${{ matrix.os }}
+    name: Test on ${{ matrix.target.triple }} ${{ matrix.release-mode && '(release)' || '(debug)' }}
+    runs-on: ${{ matrix.target.os }}
     needs:
       - build
     strategy:
       fail-fast: false
       matrix:
         release-mode: [false, true]
-        include:
-          - target: "x86_64-apple-darwin"
+        target:
+          - triple: "x86_64-apple-darwin"
             os: macos-latest
-          - target: "x86_64-pc-windows-msvc"
+          - triple: "x86_64-pc-windows-msvc"
             os: windows-latest
-          - target: "x86_64-unknown-linux-gnu"
+          - triple: "x86_64-unknown-linux-gnu"
             os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,15 +79,15 @@ jobs:
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
-          target: ${{ matrix.target }}
+          target: ${{ matrix.target.triple }}
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
         with:
-          shared-key: ${{ matrix.target }}
+          shared-key: ${{ matrix.target.triple }}
           save-if: false
 
       - name: Run all tests
-        run: cargo test --all-features --target=${{ matrix.target }} ${{ matrix.release-mode && '--release' }}
+        run: cargo test --all-features --target=${{ matrix.target.triple }} ${{ matrix.release-mode && '--release' }}
 
       # - name: Check if we compile without any features activated
       #   run: cargo build --package ${{ matrix.crate }} --no-default-features
