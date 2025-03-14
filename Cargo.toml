@@ -22,13 +22,13 @@ deno_core = "0.232.0"
 log = "0.4.26"
 pretty_assertions = "1.4.1"
 env_logger = "0.10.2"
-serde = "1.0.219"
-serde_repr = "0.1.20"
-tokio = { version = "1.44.1", features = ["fs", "rt", "macros"] }
+serde = "1.0.218"
+serde_repr = "0.1.19"
+tokio = { version = "1.43.0", features = ["fs", "rt", "macros"] }
 
 # workspace-local
-zinnia_runtime = { version = "0.21.1", path = "./runtime" }
-zinnia_libp2p = { version = "0.21.1", path = "./ext/libp2p" }
+zinnia_runtime = { version = "0.20.3", path = "./runtime" }
+zinnia_libp2p = { version = "0.20.3", path = "./ext/libp2p" }
 
 [profile.release]
 codegen-units = 1
