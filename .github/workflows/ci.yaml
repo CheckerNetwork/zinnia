@@ -12,6 +12,7 @@ concurrency:
 
 env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 2 # Fail cache download after 2 minutes.
+  # Remember to update RUST_VERSION in release.yml when updating this value.
   RUST_VERSION: '1.85'
 
 jobs:
