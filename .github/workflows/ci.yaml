@@ -20,16 +20,16 @@ jobs:
     name: Build on ${{ matrix.target }}
     strategy:
       matrix:
-        include:
-          - target: x86_64-apple-darwin
+        target:
+          - triple: x86_64-apple-darwin
             os: macos-14
-          - target: aarch64-apple-darwin
+          - triple: aarch64-apple-darwin
             os: macos-14
-          - target: x86_64-pc-windows-msvc
+          - triple: x86_64-pc-windows-msvc
             os: windows-latest
-          - target: x86_64-unknown-linux-gnu
+          - triple: x86_64-unknown-linux-gnu
             os: ubuntu-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.target.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -41,16 +41,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
-          target: ${{ matrix.target }}
+          target: ${{ matrix.target.triple }}
 
       - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
         with:
-          shared-key: ${{ matrix.target }}
+          shared-key: ${{ matrix.target.triple }}
           # Always save the build artifacts to the cache to speed up builds of additional
           # commits added to an already-opened pull request.
           # save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - run: cargo build --workspace --all-features --all-targets --target=${{ matrix.target }}
+      - run: cargo build --workspace --all-features --all-targets --target=${{ matrix.target.triple }}
 
   test:
     name: Test on ${{ matrix.target.triple }} ${{ matrix.release-mode && '(release)' || '(debug)' }}
