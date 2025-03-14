@@ -17,7 +17,7 @@ env:
   MACOSX_DEPLOYMENT_TARGET: 10.9
   # Emit backtraces on panics.
   RUST_BACKTRACE: 1
-  RUST_VERSION: '1.85'
+  RUST_VERSION: '1.77'
 
 jobs:
   github_build:
