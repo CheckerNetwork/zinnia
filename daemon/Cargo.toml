@@ -15,11 +15,11 @@ doc = false
 
 [dependencies]
 atomicwrites = "0.4.4"
-clap = { version = "4.5.31", features = ["derive", "env"] }
+clap = { version = "4.5.32", features = ["derive", "env"] }
 env_logger.workspace = true
 log.workspace = true
 serde.workspace = true
-serde_json = "1.0.139"
+serde_json = "1.0.140"
 tokio = { workspace = true }
 zinnia_runtime = { workspace = true }
 
@@ -27,7 +27,7 @@ zinnia_runtime = { workspace = true }
 assert_cmd = { workspace = true }
 assert_fs = { workspace = true }
 pretty_assertions = { workspace = true }
-tempfile = "3.17.1"
+tempfile = "3.19.0"
 
 [lints]
 workspace = true
