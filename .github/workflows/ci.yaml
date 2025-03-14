@@ -50,17 +50,17 @@ jobs:
           # commits added to an already-opened pull request.
           # save-if: ${{ github.ref == 'refs/heads/main' }}
 
-
       - run: cargo build --workspace --all-features --all-targets --target=${{ matrix.target }}
 
   test:
-    name: Test on ${{ matrix.target }}
+    name: Test on ${{ matrix.target }} ${{ matrix.release-mode && '(release)' || '(debug)' }}
     runs-on: ${{ matrix.os }}
     needs:
       - build
     strategy:
       fail-fast: false
       matrix:
+        release-mode: [false, true]
         include:
           - target: "x86_64-apple-darwin"
             os: macos-latest
@@ -87,7 +87,7 @@ jobs:
           save-if: false
 
       - name: Run all tests
-        run: cargo test --all-features --target=${{ matrix.target }}
+        run: cargo test --all-features --target=${{ matrix.target }} ${{ matrix.release-mode && '--release' }}
 
       # - name: Check if we compile without any features activated
       #   run: cargo build --package ${{ matrix.crate }} --no-default-features
