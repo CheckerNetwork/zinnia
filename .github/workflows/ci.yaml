@@ -38,7 +38,7 @@ jobs:
           go-version: '1.22'
           cache: false # caching requires a go.sum file, which we don't have in our project
 
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
+      - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
           target: ${{ matrix.target.triple }}
@@ -76,7 +76,7 @@ jobs:
           go-version: '1.22'
           cache: false # caching requires a go.sum file, which we don't have in our project
 
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
+      - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
           target: ${{ matrix.target.triple }}
@@ -117,7 +117,7 @@ jobs:
           go-version: '1.22'
           cache: false # caching requires a go.sum file, which we don't have in our project
 
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
+      - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
@@ -135,7 +135,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
+      - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
@@ -159,7 +159,7 @@ jobs:
           go-version: '1.22'
           cache: false # caching requires a go.sum file, which we don't have in our project
 
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203 # v1
+      - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
           components: rustfmt
