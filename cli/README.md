@@ -36,8 +36,8 @@ source code.
 In addition to the Rust build toolchain, you also need Go installed. See
 [Go Downloads](https://go.dev/dl/). The minimum required version of Go is 1.22.
 
-**Rust version requirement:** Zinnia requires Rust toolchain version 1.77. If you have 
-`rustup` installed, you can install this specific version using:
+**Rust version requirement:** Zinnia requires Rust toolchain version 1.77. If you have `rustup`
+installed, you can install this specific version using:
 
 ```sh
 rustup install 1.77
