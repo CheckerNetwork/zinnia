@@ -43,7 +43,7 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           target: ${{ matrix.target.triple }}
 
-      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
           shared-key: ${{ matrix.target.triple }}
           # Always save the build artifacts to the cache to speed up builds of additional
@@ -81,7 +81,7 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           target: ${{ matrix.target.triple }}
 
-      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
           shared-key: ${{ matrix.target.triple }}
           save-if: false
@@ -121,7 +121,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
 
-      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
           shared-key: "x86_64-unknown-linux-gnu"
           save-if: false
@@ -140,7 +140,7 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           components: clippy
 
-      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
+      - uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
         with:
           shared-key: "x86_64-unknown-linux-gnu"
           save-if: false
