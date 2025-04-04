@@ -19,7 +19,6 @@ function setVersions(zinniaVersion, v8Version) {
 }
 
 const zinniaNs = ObjectCreate(null);
-ObjectDefineProperties(zinniaNs, libp2p.defaultPeerProps);
 
 const activityApi = ObjectCreate(null);
 ObjectDefineProperties(activityApi, {
