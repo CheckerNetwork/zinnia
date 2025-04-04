@@ -30,7 +30,6 @@ serde.workspace = true
 serde_repr.workspace = true
 termcolor = "1.4.1"
 tokio = { workspace = true, features = ["fs"] }
-zinnia_libp2p.workspace = true
 
 [dev-dependencies]
 assert_fs = { workspace = true }
