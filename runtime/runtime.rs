@@ -14,8 +14,6 @@ use crate::{colors, Reporter};
 
 use crate::ext::ZinniaPermissions;
 
-use zinnia_libp2p;
-
 pub type AnyError = deno_core::anyhow::Error;
 use deno_core::anyhow::{anyhow, Result};
 
@@ -25,7 +23,7 @@ pub struct BootstrapOptions {
     pub no_color: bool,
     pub is_tty: bool,
 
-    /// The user agent version string to use for Fetch API requests and libp2p Identify protocol
+    /// The user agent version string to use for Fetch API requests
     pub agent_version: String,
 
     /// Seed value for initializing the random number generator
@@ -122,10 +120,6 @@ pub async fn run_js_module(
             }),
             deno_crypto::deno_crypto::init_ops_and_esm(bootstrap_options.rng_seed),
             // Zinnia-specific APIs
-            zinnia_libp2p::zinnia_libp2p::init_ops_and_esm(zinnia_libp2p::PeerNodeConfig {
-                agent_version: bootstrap_options.agent_version.clone(),
-                ..Default::default()
-            }),
             crate::ext::zinnia_runtime::init_ops_and_esm(reporter),
         ],
         inspector: false,
@@ -143,10 +137,6 @@ pub async fn run_js_module(
     let res = runtime.mod_evaluate(main_module_id);
     runtime.run_event_loop(false).await?;
     res.await??;
-
-    // TODO: it would be nicer to have this exposed as another Deno op
-    // and call it from the JavaScript side as part of the regular runtime shutdown
-    zinnia_libp2p::shutdown(runtime.op_state()).await?;
 
     Ok(())
 }
