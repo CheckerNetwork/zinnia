@@ -1464,8 +1464,7 @@ dependencies = [
 [[package]]
 name = "lassie"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45dd0b97927a2c55be0d9db751df4423f64bbad72f0d3e3b41ba405bd4338f21"
+source = "git+https://github.com/filecoin-station/rusty-lassie.git?branch=fix-linking-on-macos#def52b978a2b2fa1237767da0f1b987c8049f548"
 dependencies = [
  "cc",
  "log",
