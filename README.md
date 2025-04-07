@@ -52,8 +52,7 @@ See [Building Modules](./docs/building-modules.md).
   [Switching to Deno Core](docs/architecture-decision-records/2023-01-switching-to-deno-core.md)
 - **Non-blocking I/O:** [Async Rust](https://rust-lang.github.io/async-book/),
   [Tokio](https://tokio.rs)
-- **Networking**: [deno_fetch](https://crates.io/crates/deno_fetch),
-  [rust-libp2p](https://github.com/libp2p/rust-libp2p)
+- **Networking**: [deno_fetch](https://crates.io/crates/deno_fetch)
 - **IPFS:** [Rusty Lassie](https://github.com/filecoin-station/rusty-lassie) for retrievals. _TBD:
   Publish content to IPFS_
 - **Block (K/V) storage:** _TBD_

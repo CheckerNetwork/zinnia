@@ -4,7 +4,6 @@ const { ObjectDefineProperties, ObjectCreate, ObjectFreeze } = primordials;
 const { ops } = globalThis.Deno.core;
 
 import { readOnly } from "ext:zinnia_runtime/06_util.js";
-import * as libp2p from "ext:zinnia_libp2p/01_peer.js";
 import { inspect } from "ext:deno_console/01_console.js";
 
 const versions = {
@@ -20,7 +19,6 @@ function setVersions(zinniaVersion, v8Version) {
 }
 
 const zinniaNs = ObjectCreate(null);
-ObjectDefineProperties(zinniaNs, libp2p.defaultPeerProps);
 
 const activityApi = ObjectCreate(null);
 ObjectDefineProperties(activityApi, {

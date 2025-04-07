@@ -1,8 +1,6 @@
 [workspace]
 resolver = "2"
 members = [
-    "ext/libp2p",
-
     "runtime",
     "cli",
     "daemon",
@@ -28,7 +26,6 @@ tokio = { version = "1.44.2", features = ["fs", "rt", "macros"] }
 
 # workspace-local
 zinnia_runtime = { version = "0.21.1", path = "./runtime" }
-zinnia_libp2p = { version = "0.21.1", path = "./ext/libp2p" }
 
 [profile.release]
 codegen-units = 1
