@@ -9,14 +9,14 @@ members = [
 [workspace.package]
 edition = "2021"
 license = "MIT OR Apache-2.0"
-authors = ["Protocol Labs"]
-repository = "https://github.com/filecoin-station/zinnia"
+authors = ["CheckerNetwork"]
+repository = "https://github.com/CheckerNetwork/zinnia"
 
 [workspace.dependencies]
 assert_cmd = "2.0.16"
 assert_fs = "1.1.2"
 console_static_text = "=0.8.1"
-deno_core = "0.232.0"
+deno_core = "0.342.0"
 log = "0.4.27"
 pretty_assertions = "1.4.1"
 env_logger = "0.10.2"
