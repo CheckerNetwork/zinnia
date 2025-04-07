@@ -13,7 +13,7 @@ concurrency:
 env:
   SEGMENT_DOWNLOAD_TIMEOUT_MINS: 2 # Fail cache download after 2 minutes.
   # Remember to update RUST_VERSION in release.yml when updating this value.
-  RUST_VERSION: '1.77'
+  RUST_VERSION: "1.77"
 
 jobs:
   build:
@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: "1.22"
           cache: false # caching requires a go.sum file, which we don't have in our project
 
       - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
@@ -50,7 +50,8 @@ jobs:
           # commits added to an already-opened pull request.
           # save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - run: cargo build --workspace --all-features --all-targets --target=${{ matrix.target.triple }}
+      - run:
+          cargo build --workspace --all-features --all-targets --target=${{ matrix.target.triple }}
 
   test:
     name: Test on ${{ matrix.target.triple }} ${{ matrix.release-mode && '(release)' || '(debug)' }}
@@ -73,7 +74,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: "1.22"
           cache: false # caching requires a go.sum file, which we don't have in our project
 
       - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
@@ -87,7 +88,9 @@ jobs:
           save-if: false
 
       - name: Run all tests
-        run: cargo test --all-features --target=${{ matrix.target.triple }} ${{ matrix.release-mode && '--release' }}
+        run:
+          cargo test --all-features --target=${{ matrix.target.triple }} ${{ matrix.release-mode &&
+          '--release' }}
 
       # - name: Check if we compile without any features activated
       #   run: cargo build --package ${{ matrix.crate }} --no-default-features
@@ -114,7 +117,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: "1.22"
           cache: false # caching requires a go.sum file, which we don't have in our project
 
       - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1
@@ -127,7 +130,9 @@ jobs:
           save-if: false
 
       - name: Check rustdoc links
-        run: RUSTDOCFLAGS="--deny rustdoc::broken_intra_doc_links --deny warnings" cargo doc --verbose --workspace --no-deps --all-features --document-private-items
+        run:
+          RUSTDOCFLAGS="--deny rustdoc::broken_intra_doc_links --deny warnings" cargo doc --verbose
+          --workspace --no-deps --all-features --document-private-items
 
   clippy:
     runs-on: ubuntu-latest
@@ -156,7 +161,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: "1.22"
           cache: false # caching requires a go.sum file, which we don't have in our project
 
       - uses: dtolnay/rust-toolchain@888c2e1ea69ab0d4330cbf0af1ecc7b68f368cc1 # v1

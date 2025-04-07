@@ -6,8 +6,8 @@ name: Validate Dependabot config
 on:
   pull_request:
     paths:
-      - '.github/dependabot.yml'
-      - '.github/workflows/dependabot-validation.yml'
+      - ".github/dependabot.yml"
+      - ".github/workflows/dependabot-validation.yml"
 jobs:
   validate:
     name: Validate Dependabot config
