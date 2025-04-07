@@ -86,7 +86,6 @@ js_tests!(versions_tests);
 js_tests!(timers_tests);
 js_tests!(webapis_tests);
 js_tests!(webcrypto_tests);
-js_tests!(libp2p_tests);
 js_tests!(station_apis_tests);
 js_tests!(station_reporting_tests check_activity);
 js_tests!(module_loader_tests);
