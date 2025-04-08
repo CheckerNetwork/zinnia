@@ -86,7 +86,7 @@ impl BootstrapOptions {
             None => serde_json::Value::Null,
           },
           "zinniaVersion": self.zinnia_version,
-          "v8Version": deno_core::v8_version(),
+          "v8Version": deno_core::v8::VERSION_STRING,
         });
         serde_json::to_string_pretty(&payload).unwrap()
     }
@@ -130,13 +130,13 @@ pub async fn run_js_module(
     });
 
     let script = format!("bootstrap.mainRuntime({})", bootstrap_options.as_json());
-    runtime.execute_script(located_script_name!(), script.into())?;
+    runtime.execute_script(located_script_name!(), script)?;
 
     // Load and run the module
-    let main_module_id = runtime.load_main_module(module_specifier, None).await?;
+    let main_module_id = runtime.load_main_es_module(module_specifier).await?;
     let res = runtime.mod_evaluate(main_module_id);
-    runtime.run_event_loop(false).await?;
-    res.await??;
+    runtime.run_event_loop(Default::default()).await?;
+    res.await?;
 
     Ok(())
 }

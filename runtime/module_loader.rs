@@ -1,17 +1,16 @@
 use std::path::{Path, PathBuf};
 
 use deno_core::anyhow::anyhow;
-use deno_core::error::type_error;
+use deno_core::error::{CoreError, ModuleConcreteError, ModuleLoaderError};
 use deno_core::futures::FutureExt;
 use deno_core::{
-    resolve_import, ModuleLoader, ModuleSource, ModuleSourceFuture, ModuleSpecifier, ModuleType,
-    ResolutionKind,
+    resolve_import, ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode,
+    ModuleSpecifier, ModuleType, ResolutionKind,
 };
 
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 
-pub type AnyError = deno_core::anyhow::Error;
 use deno_core::anyhow::Result;
 
 /// Our custom module loader.
@@ -47,7 +46,7 @@ impl ModuleLoader for ZinniaModuleLoader {
         specifier: &str,
         referrer: &str,
         _kind: ResolutionKind,
-    ) -> Result<ModuleSpecifier, AnyError> {
+    ) -> Result<ModuleSpecifier, ModuleLoaderError> {
         if specifier == "zinnia:test" {
             return Ok(ModuleSpecifier::parse("ext:zinnia_runtime/test.js").unwrap());
         } else if specifier == "zinnia:assert" {
@@ -65,11 +64,12 @@ impl ModuleLoader for ZinniaModuleLoader {
         module_specifier: &ModuleSpecifier,
         maybe_referrer: Option<&ModuleSpecifier>,
         _is_dyn_import: bool,
-    ) -> std::pin::Pin<Box<ModuleSourceFuture>> {
+        _requested_module_type: deno_core::RequestedModuleType,
+    ) -> ModuleLoadResponse {
         let module_specifier = module_specifier.clone();
         let module_root = self.module_root.clone();
         let maybe_referrer = maybe_referrer.cloned();
-        async move {
+        let module_load = async move {
             let spec_str = module_specifier.as_str();
 
             let details = || {
@@ -81,33 +81,41 @@ impl ModuleLoader for ZinniaModuleLoader {
                 msg
             };
 
-            if spec_str == "https://deno.land/std@0.177.0/testing/asserts.ts" || spec_str == "https://deno.land/std@0.181.0/testing/asserts.ts" {
-                return Err(anyhow!("Zinnia bundles Deno asserts as 'zinnia:assert`. Please update your imports accordingly.{}", details()));
-            }
-
             if module_specifier.scheme() != "file" {
-                return Err(anyhow!(
+                log::error!(
                     "Unsupported scheme: {}. Zinnia can import local modules only.{}",
-                     module_specifier.scheme(),
-                     details()
-                ))
+                    module_specifier.scheme(),
+                    details()
+                );
+                return Err(ModuleLoaderError::Core(CoreError::Module(
+                    ModuleConcreteError::UnsupportedKind("remote".into()),
+                )));
             }
 
-            let module_path = module_specifier.to_file_path().map_err(|_|
-               anyhow!("Module specifier cannot be converted to a filepath.{}", details())
-            )?;
+            let module_path = module_specifier.to_file_path().map_err(|_| {
+                // NOTE(bajtos): I could not find any appropriate error code for this case.
+                // "not found" seems to be the closest one.
+                log::error!(
+                    "Module specifier cannot be converted to a filepath.{}",
+                    details()
+                );
+                ModuleLoaderError::NotFound
+            })?;
 
             // Check that the module path is inside the module root directory
             if let Some(canonical_root) = &module_root {
                 // Resolve any symlinks inside the path to prevent modules from escaping our sandbox
-                let canonical_module = module_path.canonicalize().map_err(|err| anyhow!(
-                    "Cannot canonicalize module path: {err}.\nModule file path: {}{}",
-                    module_path.display(),
-                    details()
-                ))?;
+                let canonical_module = module_path.canonicalize().map_err(|err| {
+                    log::error!(
+                        "Cannot canonicalize module path: {err}.\nModule file path: {}{}",
+                        module_path.display(),
+                        details()
+                    );
+                    ModuleLoaderError::NotFound
+                })?;
 
                 if !canonical_module.starts_with(canonical_root) {
-                    return Err(anyhow!(
+                    log::error!(
                         "Cannot import files outside of the module root directory.\n\
                          Root directory (canonical): {}\n\
                          Module file path (canonical): {}\
@@ -115,25 +123,27 @@ impl ModuleLoader for ZinniaModuleLoader {
                         canonical_root.display(),
                         canonical_module.display(),
                         details()
-                    ));
+                    );
+                    return Err(ModuleLoaderError::NotFound);
                 }
             };
 
             let code = read_file_to_string(module_path).await?;
-            let module = ModuleSource::new(ModuleType::JavaScript, code.into(), &module_specifier);
+            let module = ModuleSource::new(
+                ModuleType::JavaScript,
+                ModuleSourceCode::String(code.into()),
+                &module_specifier,
+                None,
+            );
             Ok(module)
-        }.boxed_local()
+        };
+
+        ModuleLoadResponse::Async(module_load.boxed_local())
     }
 }
 
-async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, AnyError> {
-    let mut f = File::open(&path).await.map_err(|err| {
-        type_error(format!(
-            "Module not found: {}. {}",
-            err,
-            path.as_ref().display()
-        ))
-    })?;
+async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, ModuleLoaderError> {
+    let mut f = File::open(&path).await?;
 
     // read the whole file
     let mut buffer = Vec::new();
@@ -145,7 +155,7 @@ async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, AnyError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deno_core::anyhow::Context;
+    use deno_core::{anyhow::Context, RequestedModuleType};
     use pretty_assertions::assert_eq;
 
     #[tokio::test]
@@ -154,12 +164,13 @@ mod tests {
         imported_file.push("99_main.js");
 
         let loader = ZinniaModuleLoader::build(Some(get_js_dir())).unwrap();
-        let result = loader
-            .load(
-                &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
-                None,
-                false,
-            )
+        let response = loader.load(
+            &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
+            None,
+            false,
+            RequestedModuleType::None,
+        );
+        let result = get_load_result(response)
             .await
             .with_context(|| format!("cannot import {}", imported_file.display()))
             .unwrap();
@@ -179,13 +190,13 @@ mod tests {
         imported_file.push("99_main.js");
 
         let loader = ZinniaModuleLoader::build(Some(project_root)).unwrap();
-        let result = loader
-            .load(
-                &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
-                None,
-                false,
-            )
-            .await;
+        let response = loader.load(
+            &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
+            None,
+            false,
+            RequestedModuleType::None,
+        );
+        let result = get_load_result(response).await;
 
         match result {
             Ok(_) => {
@@ -210,5 +221,14 @@ mod tests {
         let mut base_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         base_dir.push("js");
         base_dir
+    }
+
+    async fn get_load_result(
+        load_response: ModuleLoadResponse,
+    ) -> Result<ModuleSource, ModuleLoaderError> {
+        match load_response {
+            ModuleLoadResponse::Sync(result) => result,
+            ModuleLoadResponse::Async(fut) => fut.await,
+        }
     }
 }

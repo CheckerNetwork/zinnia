@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -5,7 +6,8 @@ use deno_core::anyhow::Result;
 use deno_core::error::JsError;
 use deno_core::url::Url;
 use deno_core::{op2, OpState};
-use deno_fetch::FetchPermissions;
+use deno_fetch::{FetchPermissions, FsError};
+use deno_permissions::PermissionCheckError;
 use deno_web::TimersPermission;
 
 use crate::Reporter;
@@ -27,11 +29,17 @@ impl TimersPermission for ZinniaPermissions {
 }
 
 impl FetchPermissions for ZinniaPermissions {
-    fn check_net_url(&mut self, _url: &Url, _api_name: &str) -> Result<()> {
+    fn check_net_url(&mut self, _url: &Url, _api_name: &str) -> Result<(), PermissionCheckError> {
         Ok(())
     }
-    fn check_read(&mut self, _p: &Path, _api_name: &str) -> Result<()> {
-        Ok(())
+    fn check_read<'a>(
+        &mut self,
+        _resolved: bool,
+        _p: &'a Path,
+        _api_name: &str,
+    ) -> Result<Cow<'a, Path>, FsError> {
+        // TODO: add a test that fetching file:// URLs is not allowed
+        Err(FsError::NotCapable("read local filesystem"))
     }
 }
 
