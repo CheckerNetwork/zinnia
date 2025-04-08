@@ -1,6 +1,9 @@
 // https://github.com/denoland/deno/blob/v1.38.2/runtime/fmt_errors.rs
 //
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
+
+// FIXME: upgrade this file to latest from Deno
+
 //! This mod provides DenoError to unify errors across Deno.
 use crate::colors::cyan;
 use crate::colors::italic_bold;

@@ -2,6 +2,8 @@
 //
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
+// FIXME: replace this file with deno_terminal crate
+
 use once_cell::sync::Lazy;
 use std::fmt;
 use std::io::IsTerminal;

@@ -7,7 +7,8 @@ use deno_core::error::JsError;
 use deno_core::url::Url;
 use deno_core::{op2, OpState};
 use deno_fetch::{FetchPermissions, FsError};
-use deno_permissions::PermissionCheckError;
+use deno_net::NetPermissions;
+use deno_permissions::{PermissionCheckError, PermissionDeniedError};
 use deno_web::TimersPermission;
 
 use crate::Reporter;
@@ -43,6 +44,56 @@ impl FetchPermissions for ZinniaPermissions {
     }
 }
 
+impl NetPermissions for ZinniaPermissions {
+    fn check_net<T: AsRef<str>>(
+        &mut self,
+        _host: &(T, Option<u16>),
+        _api_name: &str,
+    ) -> std::result::Result<(), PermissionCheckError> {
+        Err(PermissionCheckError::PermissionDenied(
+            PermissionDeniedError::Fatal {
+                access: "network".into(),
+            },
+        ))
+    }
+
+    fn check_read(
+        &mut self,
+        _p: &str,
+        _api_name: &str,
+    ) -> std::result::Result<std::path::PathBuf, PermissionCheckError> {
+        Err(PermissionCheckError::PermissionDenied(
+            PermissionDeniedError::Fatal {
+                access: "filesystem".into(),
+            },
+        ))
+    }
+
+    fn check_write(
+        &mut self,
+        _p: &str,
+        _api_name: &str,
+    ) -> std::result::Result<std::path::PathBuf, PermissionCheckError> {
+        Err(PermissionCheckError::PermissionDenied(
+            PermissionDeniedError::Fatal {
+                access: "filesystem".into(),
+            },
+        ))
+    }
+
+    fn check_write_path<'a>(
+        &mut self,
+        _p: &'a Path,
+        _api_name: &str,
+    ) -> std::result::Result<Cow<'a, Path>, PermissionCheckError> {
+        Err(PermissionCheckError::PermissionDenied(
+            PermissionDeniedError::Fatal {
+                access: "filesystem".into(),
+            },
+        ))
+    }
+}
+
 deno_core::extension!(
     zinnia_runtime,
     ops = [
@@ -55,6 +106,7 @@ deno_core::extension!(
     esm_entry_point = "ext:zinnia_runtime/99_main.js",
     esm = [
       dir "js",
+      "01_version.ts",
       "06_util.js",
       "90_zinnia_apis.js",
       "98_global_scope.js",

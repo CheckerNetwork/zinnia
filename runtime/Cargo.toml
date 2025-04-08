@@ -14,11 +14,16 @@ path = "lib.rs"
 [dependencies]
 console_static_text.workspace = true
 chrono = { version= "0.4.40", default-features = false, features = [ "clock", "std" ] }
+deno_ast = { version = "0.46.2", features = ["transpiling"] }
 deno_console = "0.199.0"
 deno_core.workspace = true
 deno_crypto = "0.213.0"
+deno_error = "0.5.6"
 deno_fetch = "0.223.0"
+deno_net = "0.191.0"
 deno_permissions = "0.58.0"
+deno_telemetry = "0.21.0"
+deno_tls = "0.186.0"
 deno_url = "0.199.0"
 deno_web = "0.230.0"
 deno_webidl = "0.199.0"

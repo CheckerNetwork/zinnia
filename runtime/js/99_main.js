@@ -1,5 +1,5 @@
 // ZINNIA VERSION: Copyright 2023 Protocol Labs. All rights reserved. MIT OR Apache-2.0 license.
-// ORIGINAL WORK: Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
+// ORIGINAL WORK: Copyright 2018-2025 the Deno authors. MIT license.
 // https://github.com/denoland/deno/blob/86785f21194460d713276dca2/runtime/js/99_main.js
 
 // Removes the `__proto__` for security reasons.
@@ -9,67 +9,138 @@ delete Object.prototype.__proto__;
 // Remove Intl.v8BreakIterator because it is a non-standard API.
 delete Intl.v8BreakIterator;
 
-const core = globalThis.Deno.core;
-const ops = core.ops;
-const primordials = globalThis.__bootstrap.primordials;
+import { core, primordials } from "ext:core/mod.js";
+import { op_set_format_exception_callback } from "ext:core/ops";
 const {
-  DateNow,
   Error,
   ErrorPrototype,
   ObjectDefineProperties,
   ObjectPrototypeIsPrototypeOf,
   ObjectSetPrototypeOf,
+  Symbol,
 } = primordials;
+const { isNativeError } = core;
 import * as util from "ext:zinnia_runtime/06_util.js";
 import * as event from "ext:deno_web/02_event.js";
-import * as timers from "ext:deno_web/02_timers.js";
+import * as version from "ext:zinnia_runtime/01_version.ts";
 import {
   getDefaultInspectOptions,
-  getNoColor,
+  getStderrNoColor,
   inspectArgs,
   quoteString,
-  setNoColorFn,
-  wrapConsole,
+  // setNoColorFns,
 } from "ext:deno_console/01_console.js";
 import * as performance from "ext:deno_web/15_performance.js";
+import * as fetch from "ext:deno_fetch/26_fetch.js";
+import { DOMException } from "ext:deno_web/01_dom_exception.js";
+import { SymbolDispose, SymbolMetadata } from "ext:deno_web/00_infra.js";
+import { bootstrap as bootstrapOtel } from "ext:deno_telemetry/telemetry.ts";
+
 import {
   mainRuntimeGlobalProperties,
   windowOrWorkerGlobalScope,
 } from "ext:zinnia_runtime/98_global_scope.js";
 import { setLassieConfig } from "ext:zinnia_runtime/fetch.js";
-import { setVersions } from "ext:zinnia_runtime/90_zinnia_apis.js";
+
+// deno-lint-ignore prefer-primordials
+if (Symbol.metadata) {
+  throw "V8 supports Symbol.metadata now, no need to shim it";
+}
+
+ObjectDefineProperties(Symbol, {
+  dispose: {
+    __proto__: null,
+    value: SymbolDispose,
+    enumerable: false,
+    writable: false,
+    configurable: false,
+  },
+  metadata: {
+    __proto__: null,
+    value: SymbolMetadata,
+    enumerable: false,
+    writable: false,
+    configurable: false,
+  },
+});
+
+// https://docs.rs/log/latest/log/enum.Level.html
+const LOG_LEVELS = {
+  error: 1,
+  warn: 2,
+  info: 3,
+  debug: 4,
+  trace: 5,
+};
+
+let globalThis_;
 
 function formatException(error) {
-  if (ObjectPrototypeIsPrototypeOf(ErrorPrototype, error)) {
+  if (isNativeError(error) || ObjectPrototypeIsPrototypeOf(ErrorPrototype, error)) {
     return null;
   } else if (typeof error == "string") {
     return `Uncaught ${inspectArgs([quoteString(error, getDefaultInspectOptions())], {
-      colors: !getNoColor(),
+      colors: !getStderrNoColor(),
     })}`;
   } else {
-    return `Uncaught ${inspectArgs([error], { colors: !getNoColor() })}`;
+    return `Uncaught ${inspectArgs([error], { colors: !getStderrNoColor() })}`;
   }
 }
 
-function runtimeStart(runtimeOptions) {
-  core.setMacrotaskCallback(timers.handleTimerMacrotask);
-  // core.setMacrotaskCallback(promiseRejectMacrotaskCallback);
-  // core.setWasmStreamingCallback(fetch.handleWasmStreaming);
-  // core.setReportExceptionCallback(event.reportException);
-  ops.op_set_format_exception_callback(formatException);
-  // version.setVersions(
-  //   runtimeOptions.denoVersion,
-  //   runtimeOptions.v8Version,
-  //   runtimeOptions.tsVersion,
-  // );
-  // build.setBuildInfo(runtimeOptions.target);
+core.registerErrorBuilder("DOMExceptionOperationError", function DOMExceptionOperationError(msg) {
+  return new DOMException(msg, "OperationError");
+});
+core.registerErrorBuilder(
+  "DOMExceptionQuotaExceededError",
+  function DOMExceptionQuotaExceededError(msg) {
+    return new DOMException(msg, "QuotaExceededError");
+  },
+);
+core.registerErrorBuilder(
+  "DOMExceptionNotSupportedError",
+  function DOMExceptionNotSupportedError(msg) {
+    return new DOMException(msg, "NotSupported");
+  },
+);
+core.registerErrorBuilder("DOMExceptionNetworkError", function DOMExceptionNetworkError(msg) {
+  return new DOMException(msg, "NetworkError");
+});
+core.registerErrorBuilder("DOMExceptionAbortError", function DOMExceptionAbortError(msg) {
+  return new DOMException(msg, "AbortError");
+});
+core.registerErrorBuilder(
+  "DOMExceptionInvalidCharacterError",
+  function DOMExceptionInvalidCharacterError(msg) {
+    return new DOMException(msg, "InvalidCharacterError");
+  },
+);
+core.registerErrorBuilder("DOMExceptionDataError", function DOMExceptionDataError(msg) {
+  return new DOMException(msg, "DataError");
+});
+core.registerErrorBuilder(
+  "DOMExceptionInvalidStateError",
+  function DOMExceptionInvalidStateError(msg) {
+    return new DOMException(msg, "InvalidStateError");
+  },
+);
+
+function runtimeStart({ zinniaVersion, v8Version, lassieUrl, lassieAuth }) {
+  core.setWasmStreamingCallback(fetch.handleWasmStreaming);
+  core.setReportExceptionCallback(event.reportException);
+  op_set_format_exception_callback(formatException);
+  version.setVersions(zinniaVersion, v8Version);
+  // core.setBuildInfo(target);
+
+  // FIXME: figure out log levels
   // util.setLogDebug(runtimeOptions.debugFlag, source);
   // FIXME: rework to lazy load, see
   // https://github.com/denoland/deno/commit/1ef617e8f3d48098e69e222b6eb6fe981aeca1c3
-  setNoColorFn(() => runtimeOptions.noColor || !runtimeOptions.isTty);
+  // FIXME: figure out color detection
+  // https://github.com/denoland/deno/blob/6d33141d8dd88123b76476e4c91e608919f6736c/runtime/ops/bootstrap.rs#L130-L133
+  // https://github.com/denoland/deno_terminal/
+  // setNoColorFn(() => runtimeOptions.noColor || !runtimeOptions.isTty);
 
-  setLassieConfig(runtimeOptions.lassieUrl, runtimeOptions.lassieAuth);
-  setVersions(runtimeOptions.zinniaVersion, runtimeOptions.v8Version);
+  setLassieConfig(lassieUrl, lassieAuth);
 }
 
 let hasBootstrapped = false;
@@ -81,7 +152,8 @@ function bootstrapMainRuntime(runtimeOptions) {
     throw new Error("Worker runtime already bootstrapped");
   }
 
-  performance.setTimeOrigin(DateNow());
+  performance.setTimeOrigin();
+  globalThis_ = globalThis;
 
   // Remove bootstrapping data from the global scope
   delete globalThis.__bootstrap;
@@ -91,10 +163,14 @@ function bootstrapMainRuntime(runtimeOptions) {
   ObjectDefineProperties(globalThis, mainRuntimeGlobalProperties);
   ObjectSetPrototypeOf(globalThis, Window.prototype);
 
+  bootstrapOtel([
+    0, // tracingEnabled
+    0, // metricsEnabled
+    0, // consoleConfig: ignore
+  ]);
+
   if (runtimeOptions.inspectFlag) {
-    const consoleFromV8 = core.console;
-    const consoleFromDeno = globalThis.console;
-    wrapConsole(consoleFromDeno, consoleFromV8);
+    core.wrapConsole(globalThis.console, core.v8Console);
   }
 
   event.setEventTargetData(globalThis);
@@ -103,8 +179,8 @@ function bootstrapMainRuntime(runtimeOptions) {
   runtimeStart(runtimeOptions);
 
   ObjectDefineProperties(globalThis.Zinnia, {
-    walletAddress: util.readOnly(runtimeOptions.walletAddress),
-    stationId: util.readOnly(runtimeOptions.stationId),
+    walletAddress: core.propReadOnly(runtimeOptions.walletAddress),
+    stationId: core.propReadOnly(runtimeOptions.stationId),
   });
 
   // delete `Deno` global
@@ -122,3 +198,6 @@ globalThis.bootstrap = {
 import "ext:zinnia_runtime/internals.js";
 import "ext:zinnia_runtime/test.js";
 import "ext:zinnia_runtime/vendored/asserts.bundle.js";
+import "ext:deno_web/16_image_data.js";
+import "ext:deno_web/10_filereader.js";
+import "ext:zinnia_runtime/06_util.js";

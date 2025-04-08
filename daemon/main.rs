@@ -118,7 +118,7 @@ fn exit_with_error(error: Error) {
     let error_code = 1;
 
     log::error!("{}", error_string.trim_start_matches("error: "));
-    std::process::exit(error_code);
+    zinnia_runtime::exit(error_code);
 }
 
 fn setup_lassie_tempdir(lassie_temp_dir: &Path) -> Result<()> {

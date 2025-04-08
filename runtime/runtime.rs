@@ -106,7 +106,8 @@ pub async fn run_js_module(
     // Initialize a runtime instance
     let mut runtime = JsRuntime::new(RuntimeOptions {
         extensions: vec![
-            // Web Platform APIs implemented by Deno
+            // Web Platform APIs implemented by Deno plus their dependencies
+            deno_telemetry::deno_telemetry::init_ops_and_esm(),
             deno_console::deno_console::init_ops_and_esm(),
             deno_webidl::deno_webidl::init_ops_and_esm(),
             deno_url::deno_url::init_ops_and_esm(),
@@ -119,9 +120,14 @@ pub async fn run_js_module(
                 ..Default::default()
             }),
             deno_crypto::deno_crypto::init_ops_and_esm(bootstrap_options.rng_seed),
+            deno_net::deno_net::init_ops_and_esm::<ZinniaPermissions>(None, None),
+            deno_tls::deno_tls::init_ops_and_esm(),
             // Zinnia-specific APIs
             crate::ext::zinnia_runtime::init_ops_and_esm(reporter),
         ],
+        extension_transpiler: Some(Rc::new(|specifier, source| {
+            crate::vendored::transpile::maybe_transpile_source(specifier, source)
+        })),
         inspector: false,
         module_loader: Some(Rc::new(ZinniaModuleLoader::build(
             bootstrap_options.module_root.clone(),
@@ -165,4 +171,10 @@ pub fn lassie_config() -> lassie::DaemonConfig {
 fn validate_station_id(station_id: &str) -> bool {
     static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9a-fA-F]{88}$").unwrap());
     RE.is_match(station_id)
+}
+
+pub fn exit(code: i32) -> ! {
+    deno_telemetry::flush();
+    #[allow(clippy::disallowed_methods)]
+    std::process::exit(code);
 }

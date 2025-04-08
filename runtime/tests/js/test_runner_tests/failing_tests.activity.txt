@@ -7,8 +7,6 @@ failing_tests.js
 
 failing test => file:///project-root/tests/js/test_runner_tests/failing_tests.js:7:1
 error: Error: this failed
-  throw new Error("this failed");
-        ^
     at TestCase.fn (file:///project-root/tests/js/test_runner_tests/failing_tests.js:8:9)
 
 FAIL | 1 passed | 1 failed (XXms)

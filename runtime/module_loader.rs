@@ -1,13 +1,15 @@
 use std::path::{Path, PathBuf};
 
+use deno_ast::{MediaType, ParseParams};
 use deno_core::anyhow::anyhow;
-use deno_core::error::{CoreError, ModuleConcreteError, ModuleLoaderError};
+use deno_core::error::ModuleLoaderError;
 use deno_core::futures::FutureExt;
 use deno_core::{
     resolve_import, ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode,
-    ModuleSpecifier, ModuleType, ResolutionKind,
+    ModuleSpecifier, ModuleType, RequestedModuleType, ResolutionKind,
 };
 
+use deno_error::JsErrorBox;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 
@@ -64,7 +66,7 @@ impl ModuleLoader for ZinniaModuleLoader {
         module_specifier: &ModuleSpecifier,
         maybe_referrer: Option<&ModuleSpecifier>,
         _is_dyn_import: bool,
-        _requested_module_type: deno_core::RequestedModuleType,
+        requested_module_type: RequestedModuleType,
     ) -> ModuleLoadResponse {
         let module_specifier = module_specifier.clone();
         let module_root = self.module_root.clone();
@@ -82,40 +84,36 @@ impl ModuleLoader for ZinniaModuleLoader {
             };
 
             if module_specifier.scheme() != "file" {
-                log::error!(
+                let msg = format!(
                     "Unsupported scheme: {}. Zinnia can import local modules only.{}",
                     module_specifier.scheme(),
                     details()
                 );
-                return Err(ModuleLoaderError::Core(CoreError::Module(
-                    ModuleConcreteError::UnsupportedKind("remote".into()),
-                )));
+                return Err(ModuleLoaderError::from(JsErrorBox::generic(msg)));
             }
 
             let module_path = module_specifier.to_file_path().map_err(|_| {
-                // NOTE(bajtos): I could not find any appropriate error code for this case.
-                // "not found" seems to be the closest one.
-                log::error!(
+                let msg = format!(
                     "Module specifier cannot be converted to a filepath.{}",
                     details()
                 );
-                ModuleLoaderError::NotFound
+                ModuleLoaderError::from(JsErrorBox::generic(msg))
             })?;
 
             // Check that the module path is inside the module root directory
             if let Some(canonical_root) = &module_root {
                 // Resolve any symlinks inside the path to prevent modules from escaping our sandbox
                 let canonical_module = module_path.canonicalize().map_err(|err| {
-                    log::error!(
+                    let msg = format!(
                         "Cannot canonicalize module path: {err}.\nModule file path: {}{}",
                         module_path.display(),
                         details()
                     );
-                    ModuleLoaderError::NotFound
+                    ModuleLoaderError::from(JsErrorBox::generic(msg))
                 })?;
 
                 if !canonical_module.starts_with(canonical_root) {
-                    log::error!(
+                    let msg = format!(
                         "Cannot import files outside of the module root directory.\n\
                          Root directory (canonical): {}\n\
                          Module file path (canonical): {}\
@@ -124,13 +122,70 @@ impl ModuleLoader for ZinniaModuleLoader {
                         canonical_module.display(),
                         details()
                     );
-                    return Err(ModuleLoaderError::NotFound);
+
+                    return Err(ModuleLoaderError::from(JsErrorBox::generic(msg)));
                 }
             };
 
-            let code = read_file_to_string(module_path).await?;
+            // Based on https://github.com/denoland/roll-your-own-javascript-runtime
+            let media_type = MediaType::from_path(&module_path);
+            log::debug!("Loading module: {}", module_path.display());
+            log::debug!("Media type: {:?}", media_type);
+            let (module_type, should_transpile) = match MediaType::from_path(&module_path) {
+                MediaType::JavaScript => (ModuleType::JavaScript, false),
+                MediaType::TypeScript => (ModuleType::JavaScript, true),
+                MediaType::Json => (ModuleType::Json, false),
+                _ => {
+                    return Err(ModuleLoaderError::Unsupported {
+                        specifier: module_specifier.into(),
+                        maybe_referrer: maybe_referrer.map(|r| r.into()),
+                    })
+                }
+            };
+            log::debug!(
+                "Module type: {} Should transpile: {}",
+                module_type,
+                should_transpile
+            );
+
+            // If we loaded a JSON file, but the "requested_module_type" (that is computed from
+            // import attributes) is not JSON we need to fail.
+            if module_type == ModuleType::Json && requested_module_type != RequestedModuleType::Json
+            {
+                return Err(JsErrorBox::generic("Attempted to load JSON module without specifying \"type\": \"json\" attribute in the import statement.").into());
+            }
+
+            let code = read_file_to_string(&module_path).await?;
+
+            let code = if should_transpile {
+                let parsed = deno_ast::parse_module(ParseParams {
+                    specifier: module_specifier.clone(),
+                    text: code.into(),
+                    media_type,
+                    capture_tokens: false,
+                    scope_analysis: false,
+                    maybe_syntax: None,
+                })
+                .map_err(JsErrorBox::from_err)?;
+                parsed
+                    .transpile(
+                        &deno_ast::TranspileOptions {
+                            // Configuration based on deno/runtime/transpile.rs
+                            imports_not_used_as_values: deno_ast::ImportsNotUsedAsValues::Remove,
+                            ..Default::default()
+                        },
+                        &Default::default(),
+                        &Default::default(),
+                    )
+                    .map_err(JsErrorBox::from_err)?
+                    .into_source()
+                    .text
+            } else {
+                code
+            };
+
             let module = ModuleSource::new(
-                ModuleType::JavaScript,
+                module_type,
                 ModuleSourceCode::String(code.into()),
                 &module_specifier,
                 None,

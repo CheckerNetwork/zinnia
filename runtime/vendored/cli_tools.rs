@@ -2,6 +2,8 @@
 //
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 
+// FIXME: upgrade this file to latest from Deno
+
 use crate::fmt_errors::format_js_error;
 use deno_core::{error::JsError, url::Url};
 
