@@ -50,8 +50,7 @@ jobs:
           # commits added to an already-opened pull request.
           # save-if: ${{ github.ref == 'refs/heads/main' }}
 
-      - run:
-          cargo build --workspace --all-features --all-targets --target=${{ matrix.target.triple }}
+      - run: cargo build --workspace --all-features --all-targets --target=${{ matrix.target.triple }}
 
   test:
     name: Test on ${{ matrix.target.triple }} ${{ matrix.release-mode && '(release)' || '(debug)' }}
