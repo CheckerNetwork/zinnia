@@ -24,7 +24,6 @@ const {
   Symbol,
 } = primordials;
 const { isNativeError } = core;
-import * as util from "ext:zinnia_runtime/06_util.js";
 import * as event from "ext:deno_web/02_event.js";
 import * as version from "ext:zinnia_runtime/01_version.ts";
 import {
@@ -190,8 +189,6 @@ function bootstrapMainRuntime(runtimeOptions) {
 
   // delete `Deno` global
   delete globalThis.Deno;
-
-  util.log("args", runtimeOptions.args);
 }
 
 globalThis.bootstrap = {
@@ -205,4 +202,3 @@ import "ext:zinnia_runtime/test.js";
 import "ext:zinnia_runtime/vendored/asserts.bundle.js";
 import "ext:deno_web/16_image_data.js";
 import "ext:deno_web/10_filereader.js";
-import "ext:zinnia_runtime/06_util.js";

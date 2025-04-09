@@ -110,7 +110,6 @@ deno_core::extension!(
     esm = [
       dir "js",
       "01_version.ts",
-      "06_util.js",
       "90_zinnia_apis.js",
       "98_global_scope.js",
       "internals.js",
@@ -162,7 +161,6 @@ fn op_format_test_error(#[serde] error: JsError) -> String {
 
 // https://github.com/denoland/deno/blob/v2.2.8/runtime/ops/bootstrap.rs
 // Copyright 2018-2025 the Deno authors. MIT license.
-//
 
 #[op2(fast)]
 pub fn op_bootstrap_stdout_no_color(_state: &mut OpState) -> bool {
