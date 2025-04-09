@@ -101,7 +101,10 @@ deno_core::extension!(
         op_info_activity,
         op_error_activity,
         op_zinnia_log,
-        op_format_test_error
+        op_format_test_error,
+
+        op_bootstrap_stderr_no_color,
+        op_bootstrap_stdout_no_color,
     ],
     esm_entry_point = "ext:zinnia_runtime/99_main.js",
     esm = [
@@ -155,4 +158,26 @@ fn op_zinnia_log(state: &mut OpState, #[string] msg: &str, #[smi] level: i32) {
 #[string]
 fn op_format_test_error(#[serde] error: JsError) -> String {
     crate::vendored::cli_tools::format_test_error(&error)
+}
+
+// https://github.com/denoland/deno/blob/v2.2.8/runtime/ops/bootstrap.rs
+// Copyright 2018-2025 the Deno authors. MIT license.
+//
+
+#[op2(fast)]
+pub fn op_bootstrap_stdout_no_color(_state: &mut OpState) -> bool {
+    if deno_terminal::colors::force_color() {
+        return false;
+    }
+
+    !deno_terminal::is_stdout_tty() || !deno_terminal::colors::use_color()
+}
+
+#[op2(fast)]
+pub fn op_bootstrap_stderr_no_color(_state: &mut OpState) -> bool {
+    if deno_terminal::colors::force_color() {
+        return false;
+    }
+
+    !deno_terminal::is_stderr_tty() || !deno_terminal::colors::use_color()
 }

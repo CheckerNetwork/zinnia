@@ -10,7 +10,11 @@ delete Object.prototype.__proto__;
 delete Intl.v8BreakIterator;
 
 import { core, primordials } from "ext:core/mod.js";
-import { op_set_format_exception_callback } from "ext:core/ops";
+import {
+  op_set_format_exception_callback,
+  op_bootstrap_stderr_no_color,
+  op_bootstrap_stdout_no_color,
+} from "ext:core/ops";
 const {
   Error,
   ErrorPrototype,
@@ -28,7 +32,7 @@ import {
   getStderrNoColor,
   inspectArgs,
   quoteString,
-  // setNoColorFns,
+  setNoColorFns,
 } from "ext:deno_console/01_console.js";
 import * as performance from "ext:deno_web/15_performance.js";
 import * as fetch from "ext:deno_fetch/26_fetch.js";
@@ -74,6 +78,11 @@ const LOG_LEVELS = {
 };
 
 let globalThis_;
+
+setNoColorFns(
+  () => op_bootstrap_stdout_no_color(),
+  () => op_bootstrap_stderr_no_color(),
+);
 
 function formatException(error) {
   if (isNativeError(error) || ObjectPrototypeIsPrototypeOf(ErrorPrototype, error)) {
@@ -135,10 +144,6 @@ function runtimeStart({ zinniaVersion, v8Version, lassieUrl, lassieAuth }) {
   // util.setLogDebug(runtimeOptions.debugFlag, source);
   // FIXME: rework to lazy load, see
   // https://github.com/denoland/deno/commit/1ef617e8f3d48098e69e222b6eb6fe981aeca1c3
-  // FIXME: figure out color detection
-  // https://github.com/denoland/deno/blob/6d33141d8dd88123b76476e4c91e608919f6736c/runtime/ops/bootstrap.rs#L130-L133
-  // https://github.com/denoland/deno_terminal/
-  // setNoColorFn(() => runtimeOptions.noColor || !runtimeOptions.isTty);
 
   setLassieConfig(lassieUrl, lassieAuth);
 }

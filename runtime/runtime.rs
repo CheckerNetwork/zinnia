@@ -1,4 +1,3 @@
-use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -11,7 +10,7 @@ use deno_web::BlobStore;
 use {once_cell::sync::Lazy, regex::Regex};
 
 use crate::module_loader::ZinniaModuleLoader;
-use crate::{colors, Reporter};
+use crate::Reporter;
 
 use crate::ext::ZinniaPermissions;
 
@@ -21,9 +20,6 @@ use deno_core::anyhow::{anyhow, Result};
 /// Common bootstrap options for MainWorker & WebWorker
 #[derive(Clone)]
 pub struct BootstrapOptions {
-    pub no_color: bool,
-    pub is_tty: bool,
-
     /// The user agent version string to use for Fetch API requests
     pub agent_version: String,
 
@@ -59,8 +55,6 @@ impl BootstrapOptions {
         module_root: Option<PathBuf>,
     ) -> Self {
         Self {
-            no_color: !colors::use_color(),
-            is_tty: std::io::stdout().is_terminal(),
             agent_version,
             rng_seed: None,
             module_root,
@@ -77,8 +71,6 @@ impl BootstrapOptions {
 
     pub fn as_json(&self) -> String {
         let payload = serde_json::json!({
-          "noColor": self.no_color,
-          "isTty": self.is_tty,
           "walletAddress": self.wallet_address,
           "stationId": self.station_id,
           "lassieUrl": format!("http://127.0.0.1:{}/", self.lassie_daemon.port()),

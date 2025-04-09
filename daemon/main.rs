@@ -82,8 +82,6 @@ async fn run(config: CliArgs) -> Result<RunOutput> {
         )),
         lassie_daemon: Arc::clone(&lassie_daemon),
         module_root: Some(module_root),
-        no_color: true,
-        is_tty: false,
         rng_seed: None,
     };
 
