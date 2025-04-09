@@ -170,8 +170,8 @@ impl ModuleLoader for ZinniaModuleLoader {
                 parsed
                     .transpile(
                         &deno_ast::TranspileOptions {
-                            // Configuration based on deno/runtime/transpile.rs
-                            imports_not_used_as_values: deno_ast::ImportsNotUsedAsValues::Remove,
+                            imports_not_used_as_values: deno_ast::ImportsNotUsedAsValues::Error,
+                            verbatim_module_syntax: true,
                             ..Default::default()
                         },
                         &Default::default(),
