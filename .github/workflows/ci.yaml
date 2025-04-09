@@ -21,9 +21,9 @@ jobs:
       matrix:
         target:
           - triple: x86_64-apple-darwin
-            os: macos-14
+            os: macos-13
           - triple: aarch64-apple-darwin
-            os: macos-14
+            os: macos-latest
           - triple: x86_64-pc-windows-msvc
             os: windows-latest
           - triple: x86_64-unknown-linux-gnu
@@ -61,7 +61,7 @@ jobs:
       matrix:
         release-mode: [false, true]
         target:
-          - triple: "x86_64-apple-darwin"
+          - triple: "aarch64-apple-darwin"
             os: macos-latest
           - triple: "x86_64-pc-windows-msvc"
             os: windows-latest
