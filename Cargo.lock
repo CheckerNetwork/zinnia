@@ -5793,6 +5793,7 @@ dependencies = [
  "deno_net",
  "deno_permissions",
  "deno_telemetry",
+ "deno_terminal",
  "deno_tls",
  "deno_url",
  "deno_web",

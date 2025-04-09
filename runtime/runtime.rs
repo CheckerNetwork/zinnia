@@ -1,3 +1,4 @@
+use std::io::IsTerminal;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -59,7 +60,7 @@ impl BootstrapOptions {
     ) -> Self {
         Self {
             no_color: !colors::use_color(),
-            is_tty: colors::is_tty(),
+            is_tty: std::io::stdout().is_terminal(),
             agent_version,
             rng_seed: None,
             module_root,
