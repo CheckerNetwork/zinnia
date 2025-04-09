@@ -1,9 +1,6 @@
 // https://github.com/denoland/deno/blob/v1.38.2/runtime/fmt_errors.rs
-//
+
 // Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
-
-// FIXME: upgrade this file to latest from Deno
-
 //! This mod provides DenoError to unify errors across Deno.
 use crate::colors::cyan;
 use crate::colors::italic_bold;
@@ -316,6 +313,7 @@ pub fn format_js_error(js_error: &JsError) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use console_static_text::ansi::strip_ansi_codes;
 
     #[test]
     fn test_format_none_source_line() {
@@ -327,7 +325,7 @@ mod tests {
     fn test_format_some_source_line() {
         let actual = format_maybe_source_line(Some("console.log('foo');"), Some(9), true, 0);
         assert_eq!(
-            console_static_text::ansi::strip_ansi_codes(&actual),
+            strip_ansi_codes(&actual),
             "\nconsole.log(\'foo\');\n        ^"
         );
     }
