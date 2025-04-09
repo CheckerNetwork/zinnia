@@ -1,11 +1,12 @@
-// https://github.com/denoland/deno/blob/v1.38.2/cli/tools/test.rs
-//
-// Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
+// https://github.com/denoland/deno/blob/v2.2.8/cli/tools/test/fmt.rs
 
-// FIXME: upgrade this file to latest from Deno
+// Copyright 2018-2025 the Deno authors. MIT license.
 
-use crate::fmt_errors::format_js_error;
-use deno_core::{error::JsError, url::Url};
+use deno_core::error::JsError;
+use deno_core::url::Url;
+
+use super::cli_util_path::to_percent_decoded_str;
+use super::fmt_errors::format_js_error;
 
 #[allow(dead_code)]
 pub fn to_relative_path_or_remote_url(cwd: &Url, path_or_url: &str) -> String {
@@ -17,7 +18,7 @@ pub fn to_relative_path_or_remote_url(cwd: &Url, path_or_url: &str) -> String {
             if !r.starts_with("../") {
                 r = format!("./{r}");
             }
-            return r;
+            return to_percent_decoded_str(&r);
         }
     }
     path_or_url.to_string()
@@ -67,6 +68,8 @@ fn abbreviate_test_error(js_error: &JsError) -> JsError {
 
 // This function prettifies `JsError` and applies some changes specifically for
 // test runner purposes:
+//
+// - hide stack traces if `options.hide_stacktraces` is set to `true`
 //
 // - filter out stack frames:
 //   - if stack trace consists of mixed user and internal code, the frames
