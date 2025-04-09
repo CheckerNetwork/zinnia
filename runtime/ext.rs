@@ -39,7 +39,6 @@ impl FetchPermissions for ZinniaPermissions {
         _p: &'a Path,
         _api_name: &str,
     ) -> Result<Cow<'a, Path>, FsError> {
-        // TODO: add a test that fetching file:// URLs is not allowed
         Err(FsError::NotCapable("read local filesystem"))
     }
 }

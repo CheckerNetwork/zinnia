@@ -88,6 +88,7 @@ js_tests!(webcrypto_tests);
 js_tests!(station_apis_tests);
 js_tests!(station_reporting_tests check_activity);
 js_tests!(module_loader_tests);
+js_tests!(fetch_tests);
 js_tests!(ipfs_retrieval_tests);
 
 test_runner_tests!(passing_tests);
