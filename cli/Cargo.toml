@@ -32,9 +32,9 @@ tokio = { workspace = true, features = ["io-util"] }
 [package.metadata.winres]
 # This section defines the metadata that appears in the deno.exe PE header.
 OriginalFilename = "zinnia.exe"
-LegalCopyright = "© Protocol Labs & Zinnia contributors. Permissive License Stack (Apache-2.0 or MIT)."
-ProductName = "Filecoin Station"
-FileDescription = "Zinnia: Secure sandboxed runtime for Filecoin Station modules."
+LegalCopyright = "© Space Meridian & Zinnia contributors. Permissive License Stack (Apache-2.0 or MIT)."
+ProductName = "Checker Network"
+FileDescription = "Zinnia: Secure sandboxed runtime for Checker Network checker nodes"
 
 [lints]
 workspace = true

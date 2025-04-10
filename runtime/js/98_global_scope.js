@@ -1,4 +1,4 @@
-// ZINNIA VERSION: Copyright 2023 Protocol Labs. All rights reserved. MIT OR Apache-2.0 license.
+// ZINNIA VERSION: Copyright 2023-2025 Space Meridian. All rights reserved. MIT OR Apache-2.0 license.
 // ORIGINAL WORK: Copyright 2018-2023 the Deno authors. All rights reserved. MIT license.
 // https://github.com/denoland/deno/blob/86785f21194460d713276dca2/runtime/js/98_global_scope.js
 
