@@ -1,55 +1,43 @@
-const primordials = globalThis.__bootstrap.primordials;
-const { ObjectDefineProperties, ObjectCreate, ObjectFreeze } = primordials;
+import { core, primordials } from "ext:core/mod.js";
+const { ObjectCreate, ObjectDefineProperties } = primordials;
 
-const { ops } = globalThis.Deno.core;
+import { op_info_activity, op_error_activity, op_job_completed, op_zinnia_log } from "ext:core/ops";
 
-import { readOnly } from "ext:zinnia_runtime/06_util.js";
 import { inspect } from "ext:deno_console/01_console.js";
-
-const versions = {
-  zinnia: "",
-  v8: "",
-};
-
-function setVersions(zinniaVersion, v8Version) {
-  versions.zinnia = zinniaVersion;
-  versions.v8 = v8Version;
-
-  ObjectFreeze(versions);
-}
+import { versions } from "ext:zinnia_runtime/01_version.ts";
 
 const zinniaNs = ObjectCreate(null);
 
 const activityApi = ObjectCreate(null);
 ObjectDefineProperties(activityApi, {
-  info: readOnly(reportInfoActivity),
-  error: readOnly(reportErrorActivity),
+  info: core.propReadOnly(reportInfoActivity),
+  error: core.propReadOnly(reportErrorActivity),
 });
 
 ObjectDefineProperties(zinniaNs, {
-  activity: readOnly(activityApi),
-  jobCompleted: readOnly(reportJobCompleted),
-  versions: readOnly(versions),
-  inspect: readOnly(inspect),
+  activity: core.propReadOnly(activityApi),
+  jobCompleted: core.propReadOnly(reportJobCompleted),
+  versions: core.propReadOnly(versions),
+  inspect: core.propReadOnly(inspect),
 });
 
 function reportInfoActivity(msg) {
   if (typeof msg !== "string") msg = "" + msg;
-  ops.op_info_activity(msg);
+  op_info_activity(msg);
 }
 
 function reportErrorActivity(msg) {
   if (typeof msg !== "string") msg = "" + msg;
-  ops.op_error_activity(msg);
+  op_error_activity(msg);
 }
 
 function reportJobCompleted() {
-  ops.op_job_completed();
+  op_job_completed();
 }
 
 function log(msg, level) {
   if (typeof msg !== "string") msg = "" + msg;
-  ops.op_zinnia_log(msg, level);
+  op_zinnia_log(msg, level);
 }
 
-export { zinniaNs, log, setVersions };
+export { zinniaNs, log };

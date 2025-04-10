@@ -7,9 +7,8 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use anyhow::{anyhow, Context};
-use deno_core::error::JsError;
 use deno_core::ModuleSpecifier;
-use zinnia_runtime::RecordingReporter;
+use zinnia_runtime::{any_and_jserrorbox_downcast_ref, CoreError, RecordingReporter};
 use zinnia_runtime::{anyhow, deno_core, run_js_module, AnyError, BootstrapOptions};
 
 use pretty_assertions::assert_eq;
@@ -89,6 +88,7 @@ js_tests!(webcrypto_tests);
 js_tests!(station_apis_tests);
 js_tests!(station_reporting_tests check_activity);
 js_tests!(module_loader_tests);
+js_tests!(fetch_tests);
 js_tests!(ipfs_retrieval_tests);
 
 test_runner_tests!(passing_tests);
@@ -189,7 +189,7 @@ fn format_test_activities(events: &[String]) -> String {
 }
 
 fn assert_test_runner_failure(error: AnyError) {
-    if let Some(e) = error.downcast_ref::<JsError>() {
+    if let Some(CoreError::Js(e)) = any_and_jserrorbox_downcast_ref::<CoreError>(&error) {
         assert_eq!(
             e.name,
             Some("[some tests failed]\u{001b}[2K\x0D".to_string()),
