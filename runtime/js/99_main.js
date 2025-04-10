@@ -67,15 +67,6 @@ ObjectDefineProperties(Symbol, {
   },
 });
 
-// https://docs.rs/log/latest/log/enum.Level.html
-const LOG_LEVELS = {
-  error: 1,
-  warn: 2,
-  info: 3,
-  debug: 4,
-  trace: 5,
-};
-
 let globalThis_;
 
 setNoColorFns(
