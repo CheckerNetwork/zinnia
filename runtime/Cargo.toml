@@ -38,6 +38,7 @@ serde.workspace = true
 serde_repr.workspace = true
 termcolor = "1.4.1"
 tokio = { workspace = true, features = ["fs"] }
+color-print = "0.3.7"
 
 [dev-dependencies]
 assert_fs = { workspace = true }
