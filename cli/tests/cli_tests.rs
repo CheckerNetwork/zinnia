@@ -70,10 +70,11 @@ function fail() {
         &std::env::current_dir().context("unable to get current working directory")?,
     )?;
 
-    // FIXME: stderr should include the source code line constructing the error
     let expected_stderr = format!(
         r#"
-  error: Uncaught (in promise) Error: boom!
+error: Uncaught (in promise) Error: boom!
+  throw new Error("boom!");
+        ^
     at fail ({mod_url}:5:9)
     at {mod_url}:2:1
 "#

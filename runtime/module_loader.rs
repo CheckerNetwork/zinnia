@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 
 use deno_ast::{MediaType, ParseParams};
 use deno_core::anyhow::anyhow;
@@ -18,6 +20,8 @@ use deno_core::anyhow::Result;
 /// Our custom module loader.
 pub struct ZinniaModuleLoader {
     module_root: Option<PathBuf>,
+    // Cache mapping file_name to source_code
+    code_cache: Arc<RwLock<HashMap<String, String>>>,
 }
 
 impl ZinniaModuleLoader {
@@ -28,7 +32,10 @@ impl ZinniaModuleLoader {
             Some(r) => Some(r.canonicalize()?),
         };
 
-        Ok(Self { module_root })
+        Ok(Self {
+            module_root,
+            code_cache: Arc::new(RwLock::new(HashMap::new())),
+        })
     }
 }
 
@@ -71,6 +78,7 @@ impl ModuleLoader for ZinniaModuleLoader {
         let module_specifier = module_specifier.clone();
         let module_root = self.module_root.clone();
         let maybe_referrer = maybe_referrer.cloned();
+        let code_cache = self.code_cache.clone();
         let module_load = async move {
             let spec_str = module_specifier.as_str();
 
@@ -184,16 +192,45 @@ impl ModuleLoader for ZinniaModuleLoader {
                 code
             };
 
+            code_cache
+                .write()
+                .map_err(|_| {
+                    JsErrorBox::generic("Unexpected internal error: code_cache lock was poisoned")
+                })?
+                .insert(spec_str.to_string(), code.clone());
+
             let module = ModuleSource::new(
                 module_type,
                 ModuleSourceCode::String(code.into()),
                 &module_specifier,
                 None,
             );
+
             Ok(module)
         };
 
         ModuleLoadResponse::Async(module_load.boxed_local())
+    }
+
+    fn get_source_mapped_source_line(&self, file_name: &str, line_number: usize) -> Option<String> {
+        log::debug!("get_source_mapped_source_line {file_name}:{line_number}");
+        let code_cache = self.code_cache.read().ok()?;
+        let code = code_cache.get(file_name)?;
+
+        // Based on Deno cli/module_loader.rs
+        // https://github.com/denoland/deno/blob/32b9cc91d8c343bdec2ddcf3cedb27b5efc2f5e4/cli/module_loader.rs#L1195-L1218
+
+        // Do NOT use .lines(): it skips the terminating empty line.
+        // (due to internally using_terminator() instead of .split())
+        let lines: Vec<&str> = code.split('\n').collect();
+        if line_number >= lines.len() {
+            Some(format!(
+          "{} Couldn't format source line: Line {} is out of bounds (source may have changed at runtime)",
+          crate::colors::yellow("Warning"), line_number + 1,
+        ))
+        } else {
+            Some(lines[line_number].to_string())
+        }
     }
 }
 
