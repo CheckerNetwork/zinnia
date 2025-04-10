@@ -128,12 +128,6 @@ function runtimeStart({ zinniaVersion, v8Version, lassieUrl, lassieAuth }) {
   core.setReportExceptionCallback(event.reportException);
   op_set_format_exception_callback(formatException);
   version.setVersions(zinniaVersion, v8Version);
-  // core.setBuildInfo(target);
-
-  // FIXME: figure out log levels
-  // util.setLogDebug(runtimeOptions.debugFlag, source);
-  // FIXME: rework to lazy load, see
-  // https://github.com/denoland/deno/commit/1ef617e8f3d48098e69e222b6eb6fe981aeca1c3
 
   setLassieConfig(lassieUrl, lassieAuth);
 }
