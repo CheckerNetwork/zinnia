@@ -34,7 +34,7 @@ tokio = { workspace = true, features = ["io-util"] }
 OriginalFilename = "zinnia.exe"
 LegalCopyright = "© Space Meridian & Zinnia contributors. Permissive License Stack (Apache-2.0 or MIT)."
 ProductName = "Checker Network"
-FileDescription = "Zinnia: Secure sandboxed runtime for Checker Network checker nodes"
+FileDescription = "Zinnia: Secure sandboxed runtime for Checker Network nodes"
 
 [lints]
 workspace = true
