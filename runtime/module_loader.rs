@@ -1,22 +1,27 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 
+use deno_ast::{MediaType, ParseParams};
 use deno_core::anyhow::anyhow;
-use deno_core::error::type_error;
+use deno_core::error::ModuleLoaderError;
 use deno_core::futures::FutureExt;
 use deno_core::{
-    resolve_import, ModuleLoader, ModuleSource, ModuleSourceFuture, ModuleSpecifier, ModuleType,
-    ResolutionKind,
+    resolve_import, ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode,
+    ModuleSpecifier, ModuleType, RequestedModuleType, ResolutionKind,
 };
 
+use deno_error::JsErrorBox;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 
-pub type AnyError = deno_core::anyhow::Error;
 use deno_core::anyhow::Result;
 
 /// Our custom module loader.
 pub struct ZinniaModuleLoader {
     module_root: Option<PathBuf>,
+    // Cache mapping file_name to source_code
+    code_cache: Arc<RwLock<HashMap<String, String>>>,
 }
 
 impl ZinniaModuleLoader {
@@ -27,7 +32,10 @@ impl ZinniaModuleLoader {
             Some(r) => Some(r.canonicalize()?),
         };
 
-        Ok(Self { module_root })
+        Ok(Self {
+            module_root,
+            code_cache: Arc::new(RwLock::new(HashMap::new())),
+        })
     }
 }
 
@@ -47,7 +55,7 @@ impl ModuleLoader for ZinniaModuleLoader {
         specifier: &str,
         referrer: &str,
         _kind: ResolutionKind,
-    ) -> Result<ModuleSpecifier, AnyError> {
+    ) -> Result<ModuleSpecifier, ModuleLoaderError> {
         if specifier == "zinnia:test" {
             return Ok(ModuleSpecifier::parse("ext:zinnia_runtime/test.js").unwrap());
         } else if specifier == "zinnia:assert" {
@@ -65,11 +73,13 @@ impl ModuleLoader for ZinniaModuleLoader {
         module_specifier: &ModuleSpecifier,
         maybe_referrer: Option<&ModuleSpecifier>,
         _is_dyn_import: bool,
-    ) -> std::pin::Pin<Box<ModuleSourceFuture>> {
+        requested_module_type: RequestedModuleType,
+    ) -> ModuleLoadResponse {
         let module_specifier = module_specifier.clone();
         let module_root = self.module_root.clone();
         let maybe_referrer = maybe_referrer.cloned();
-        async move {
+        let code_cache = self.code_cache.clone();
+        let module_load = async move {
             let spec_str = module_specifier.as_str();
 
             let details = || {
@@ -81,33 +91,37 @@ impl ModuleLoader for ZinniaModuleLoader {
                 msg
             };
 
-            if spec_str == "https://deno.land/std@0.177.0/testing/asserts.ts" || spec_str == "https://deno.land/std@0.181.0/testing/asserts.ts" {
-                return Err(anyhow!("Zinnia bundles Deno asserts as 'zinnia:assert`. Please update your imports accordingly.{}", details()));
-            }
-
             if module_specifier.scheme() != "file" {
-                return Err(anyhow!(
+                let msg = format!(
                     "Unsupported scheme: {}. Zinnia can import local modules only.{}",
-                     module_specifier.scheme(),
-                     details()
-                ))
+                    module_specifier.scheme(),
+                    details()
+                );
+                return Err(ModuleLoaderError::from(JsErrorBox::generic(msg)));
             }
 
-            let module_path = module_specifier.to_file_path().map_err(|_|
-               anyhow!("Module specifier cannot be converted to a filepath.{}", details())
-            )?;
+            let module_path = module_specifier.to_file_path().map_err(|_| {
+                let msg = format!(
+                    "Module specifier cannot be converted to a filepath.{}",
+                    details()
+                );
+                ModuleLoaderError::from(JsErrorBox::generic(msg))
+            })?;
 
             // Check that the module path is inside the module root directory
             if let Some(canonical_root) = &module_root {
                 // Resolve any symlinks inside the path to prevent modules from escaping our sandbox
-                let canonical_module = module_path.canonicalize().map_err(|err| anyhow!(
-                    "Cannot canonicalize module path: {err}.\nModule file path: {}{}",
-                    module_path.display(),
-                    details()
-                ))?;
+                let canonical_module = module_path.canonicalize().map_err(|err| {
+                    let msg = format!(
+                        "Cannot canonicalize module path: {err}.\nModule file path: {}{}",
+                        module_path.display(),
+                        details()
+                    );
+                    ModuleLoaderError::from(JsErrorBox::generic(msg))
+                })?;
 
                 if !canonical_module.starts_with(canonical_root) {
-                    return Err(anyhow!(
+                    let msg = format!(
                         "Cannot import files outside of the module root directory.\n\
                          Root directory (canonical): {}\n\
                          Module file path (canonical): {}\
@@ -115,25 +129,113 @@ impl ModuleLoader for ZinniaModuleLoader {
                         canonical_root.display(),
                         canonical_module.display(),
                         details()
-                    ));
+                    );
+
+                    return Err(ModuleLoaderError::from(JsErrorBox::generic(msg)));
                 }
             };
 
-            let code = read_file_to_string(module_path).await?;
-            let module = ModuleSource::new(ModuleType::JavaScript, code.into(), &module_specifier);
+            // Based on https://github.com/denoland/roll-your-own-javascript-runtime
+            let media_type = MediaType::from_path(&module_path);
+            log::debug!("Loading module: {}", module_path.display());
+            log::debug!("Media type: {:?}", media_type);
+            let (module_type, should_transpile) = match MediaType::from_path(&module_path) {
+                MediaType::JavaScript => (ModuleType::JavaScript, false),
+                MediaType::TypeScript => (ModuleType::JavaScript, true),
+                MediaType::Json => (ModuleType::Json, false),
+                _ => {
+                    return Err(ModuleLoaderError::Unsupported {
+                        specifier: module_specifier.into(),
+                        maybe_referrer: maybe_referrer.map(|r| r.into()),
+                    })
+                }
+            };
+            log::debug!(
+                "Module type: {} Should transpile: {}",
+                module_type,
+                should_transpile
+            );
+
+            // If we loaded a JSON file, but the "requested_module_type" (that is computed from
+            // import attributes) is not JSON we need to fail.
+            if module_type == ModuleType::Json && requested_module_type != RequestedModuleType::Json
+            {
+                return Err(JsErrorBox::generic("Attempted to load JSON module without specifying \"type\": \"json\" attribute in the import statement.").into());
+            }
+
+            let code = read_file_to_string(&module_path).await?;
+
+            let code = if should_transpile {
+                let parsed = deno_ast::parse_module(ParseParams {
+                    specifier: module_specifier.clone(),
+                    text: code.into(),
+                    media_type,
+                    capture_tokens: false,
+                    scope_analysis: false,
+                    maybe_syntax: None,
+                })
+                .map_err(JsErrorBox::from_err)?;
+                parsed
+                    .transpile(
+                        &deno_ast::TranspileOptions {
+                            imports_not_used_as_values: deno_ast::ImportsNotUsedAsValues::Error,
+                            verbatim_module_syntax: true,
+                            ..Default::default()
+                        },
+                        &Default::default(),
+                        &Default::default(),
+                    )
+                    .map_err(JsErrorBox::from_err)?
+                    .into_source()
+                    .text
+            } else {
+                code
+            };
+
+            code_cache
+                .write()
+                .map_err(|_| {
+                    JsErrorBox::generic("Unexpected internal error: code_cache lock was poisoned")
+                })?
+                .insert(spec_str.to_string(), code.clone());
+
+            let module = ModuleSource::new(
+                module_type,
+                ModuleSourceCode::String(code.into()),
+                &module_specifier,
+                None,
+            );
+
             Ok(module)
-        }.boxed_local()
+        };
+
+        ModuleLoadResponse::Async(module_load.boxed_local())
+    }
+
+    fn get_source_mapped_source_line(&self, file_name: &str, line_number: usize) -> Option<String> {
+        log::debug!("get_source_mapped_source_line {file_name}:{line_number}");
+        let code_cache = self.code_cache.read().ok()?;
+        let code = code_cache.get(file_name)?;
+
+        // Based on Deno cli/module_loader.rs
+        // https://github.com/denoland/deno/blob/32b9cc91d8c343bdec2ddcf3cedb27b5efc2f5e4/cli/module_loader.rs#L1195-L1218
+
+        // Do NOT use .lines(): it skips the terminating empty line.
+        // (due to internally using_terminator() instead of .split())
+        let lines: Vec<&str> = code.split('\n').collect();
+        if line_number >= lines.len() {
+            Some(format!(
+          "{} Couldn't format source line: Line {} is out of bounds (source may have changed at runtime)",
+          crate::colors::yellow("Warning"), line_number + 1,
+        ))
+        } else {
+            Some(lines[line_number].to_string())
+        }
     }
 }
 
-async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, AnyError> {
-    let mut f = File::open(&path).await.map_err(|err| {
-        type_error(format!(
-            "Module not found: {}. {}",
-            err,
-            path.as_ref().display()
-        ))
-    })?;
+async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, ModuleLoaderError> {
+    let mut f = File::open(&path).await?;
 
     // read the whole file
     let mut buffer = Vec::new();
@@ -145,7 +247,7 @@ async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, AnyError>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use deno_core::anyhow::Context;
+    use deno_core::{anyhow::Context, RequestedModuleType};
     use pretty_assertions::assert_eq;
 
     #[tokio::test]
@@ -154,12 +256,13 @@ mod tests {
         imported_file.push("99_main.js");
 
         let loader = ZinniaModuleLoader::build(Some(get_js_dir())).unwrap();
-        let result = loader
-            .load(
-                &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
-                None,
-                false,
-            )
+        let response = loader.load(
+            &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
+            None,
+            false,
+            RequestedModuleType::None,
+        );
+        let result = get_load_result(response)
             .await
             .with_context(|| format!("cannot import {}", imported_file.display()))
             .unwrap();
@@ -179,13 +282,13 @@ mod tests {
         imported_file.push("99_main.js");
 
         let loader = ZinniaModuleLoader::build(Some(project_root)).unwrap();
-        let result = loader
-            .load(
-                &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
-                None,
-                false,
-            )
-            .await;
+        let response = loader.load(
+            &ModuleSpecifier::from_file_path(&imported_file).unwrap(),
+            None,
+            false,
+            RequestedModuleType::None,
+        );
+        let result = get_load_result(response).await;
 
         match result {
             Ok(_) => {
@@ -210,5 +313,14 @@ mod tests {
         let mut base_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         base_dir.push("js");
         base_dir
+    }
+
+    async fn get_load_result(
+        load_response: ModuleLoadResponse,
+    ) -> Result<ModuleSource, ModuleLoaderError> {
+        match load_response {
+            ModuleLoadResponse::Sync(result) => result,
+            ModuleLoadResponse::Async(fut) => fut.await,
+        }
     }
 }

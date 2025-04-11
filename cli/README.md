@@ -33,12 +33,12 @@ If you have Rust tooling installed on your machine (see
 [Install Rust](https://www.rust-lang.org/tools/install)), you can build & install Zinnia from the
 source code.
 
-**Rust version requirement:** Zinnia requires Rust toolchain version 1.77. If you have `rustup`
+**Rust version requirement:** Zinnia requires Rust toolchain version 1.85. If you have `rustup`
 installed, you can install this specific version using:
 
 ```sh
-rustup install 1.77
-rustup default 1.77
+rustup install 1.85
+rustup default 1.85
 ```
 
 In addition to the Rust build toolchain, you also need Go installed. See

@@ -1,5 +1,5 @@
 import { test } from "zinnia:test";
-import { assert, assertEquals } from "zinnia:assert";
+import { assert, assertEquals, assertRejects } from "zinnia:assert";
 
 test("fetch", async () => {
   const res = await fetch("https://google.com/");
@@ -7,6 +7,11 @@ test("fetch", async () => {
   const text = await res.text();
   assertEquals(typeof text, "string");
   assert(text.includes("<body"));
+});
+
+test("fetch from filesystem", async () => {
+  const err = await assertRejects(async () => fetch("file:///etc/passwd"));
+  assertEquals(err.message, "NetworkError when attempting to fetch resource");
 });
 
 test("FormData", async () => {

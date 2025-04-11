@@ -7,11 +7,11 @@ use std::time::Duration;
 use args::{CliArgs, Commands};
 use clap::Parser;
 
-use zinnia_runtime::anyhow::{Context, Error, Result};
-use zinnia_runtime::deno_core::error::JsError;
+use zinnia_runtime::anyhow::{Context, Result};
 use zinnia_runtime::fmt_errors::format_js_error;
 use zinnia_runtime::{
-    colors, lassie, lassie_config, resolve_path, run_js_module, BootstrapOptions, ConsoleReporter,
+    any_and_jserrorbox_downcast_ref, colors, lassie, lassie_config, resolve_path, run_js_module,
+    AnyError, BootstrapOptions, ConsoleReporter, CoreError,
 };
 
 #[tokio::main(flavor = "current_thread")]
@@ -23,7 +23,7 @@ async fn main() {
 
     match main_impl().await {
         Ok(_) => (),
-        Err(err) => exit_with_error(err),
+        Err(err) => exit_for_error(err),
     }
 }
 
@@ -94,22 +94,27 @@ async fn run_module(file: String) -> Result<RunOutput> {
     })
 }
 
-fn exit_with_error(error: Error) {
-    // Inspired by unwrap_or_exit<T> from Deno's `cli/main.rs`
-    // https://github.com/denoland/deno/blob/34bfa2cb2c1f0f74a94ced8fc164e81cc91cb9f4/cli/main.rs
-    let mut error_string = format!("{error:?}");
-    let error_code = 1;
+// Inspired by exit_for_error from Deno's `cli/main.rs`
+// https://github.com/denoland/deno/blob/main/cli/main.rs
 
-    if let Some(e) = error.downcast_ref::<JsError>() {
-        error_string = format_js_error(e);
-    }
-
+fn exit_with_message(message: &str, code: i32) -> ! {
     eprintln!(
         "{}: {}",
         colors::red_bold("error"),
-        error_string.trim_start_matches("error: ")
+        message.trim_start_matches("error: ")
     );
-    std::process::exit(error_code);
+    zinnia_runtime::exit(code);
+}
+
+fn exit_for_error(error: AnyError) -> ! {
+    let mut error_string = format!("{error:?}");
+    let error_code = 1;
+
+    if let Some(CoreError::Js(e)) = any_and_jserrorbox_downcast_ref::<CoreError>(&error) {
+        error_string = format_js_error(e);
+    }
+
+    exit_with_message(&error_string, error_code);
 }
 
 #[cfg(test)]
