@@ -37,6 +37,7 @@ const windowOrWorkerGlobalScope = {
   AbortController: core.propNonEnumerable(abortSignal.AbortController),
   AbortSignal: core.propNonEnumerable(abortSignal.AbortSignal),
   // Intentionally disabled until we need this.
+  // See https://github.com/CheckerNetwork/zinnia/issues/46
   // Blob: core.propNonEnumerable(file.Blob),
   ByteLengthQueuingStrategy: core.propNonEnumerable(streams.ByteLengthQueuingStrategy),
   CloseEvent: core.propNonEnumerable(event.CloseEvent),
@@ -50,11 +51,13 @@ const windowOrWorkerGlobalScope = {
   Event: core.propNonEnumerable(event.Event),
   EventTarget: core.propNonEnumerable(event.EventTarget),
   // Intentionally disabled until we need this.
+  // See https://github.com/CheckerNetwork/zinnia/issues/46
   // File: core.propNonEnumerable(file.File),
   // FileReader: core.propNonEnumerable(fileReader.FileReader),
   FormData: core.propNonEnumerable(formData.FormData),
   Headers: core.propNonEnumerable(headers.Headers),
-  // TODO: ImageData & ImageBitmap
+  // Intentionally disabled until we need this.
+  // See https://github.com/CheckerNetwork/zinnia/issues/724
   // ImageData: core.propNonEnumerable(imageData.ImageData),
   // ImageBitmap: core.propNonEnumerableLazyLoaded((image) => image.ImageBitmap, loadImage),
   MessageEvent: core.propNonEnumerable(event.MessageEvent),
@@ -78,10 +81,12 @@ const windowOrWorkerGlobalScope = {
   URLSearchParams: core.propNonEnumerable(url.URLSearchParams),
   // See https://github.com/CheckerNetwork/zinnia/issues/704
   // WebSocket: core.propNonEnumerable(webSocket.WebSocket),
-  // TODO(?): Service & Web Workers
+  // Intentionally disabled until we need this.
+  // https://github.com/CheckerNetwork/zinnia/issues/725
   // MessageChannel: core.propNonEnumerable(messagePort.MessageChannel),
   MessagePort: core.propNonEnumerable(messagePort.MessagePort),
-  // TODO(?): Service & Web Workers
+  // Intentionally disabled until we need this.
+  // https://github.com/CheckerNetwork/zinnia/issues/725
   // Worker: core.propNonEnumerable(worker.Worker),
   WritableStream: core.propNonEnumerable(streams.WritableStream),
   WritableStreamDefaultWriter: core.propNonEnumerable(streams.WritableStreamDefaultWriter),
@@ -95,7 +100,8 @@ const windowOrWorkerGlobalScope = {
   ),
   atob: core.propWritable(base64.atob),
   btoa: core.propWritable(base64.btoa),
-  // TODO: ImageData & ImageBitmap
+  // Intentionally disabled until we need this.
+  // See https://github.com/CheckerNetwork/zinnia/issues/724
   // createImageBitmap: core.propWritableLazyLoaded((image) => image.createImageBitmap, loadImage),
   clearInterval: core.propWritable(timers.clearInterval),
   clearTimeout: core.propWritable(timers.clearTimeout),
