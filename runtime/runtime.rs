@@ -10,7 +10,7 @@ use deno_web::BlobStore;
 use {once_cell::sync::Lazy, regex::Regex};
 
 use crate::module_loader::ZinniaModuleLoader;
-use crate::{colors, Reporter};
+use crate::Reporter;
 
 use crate::ext::ZinniaPermissions;
 
@@ -20,9 +20,6 @@ use deno_core::anyhow::{anyhow, Result};
 /// Common bootstrap options for MainWorker & WebWorker
 #[derive(Clone)]
 pub struct BootstrapOptions {
-    pub no_color: bool,
-    pub is_tty: bool,
-
     /// The user agent version string to use for Fetch API requests
     pub agent_version: String,
 
@@ -58,8 +55,6 @@ impl BootstrapOptions {
         module_root: Option<PathBuf>,
     ) -> Self {
         Self {
-            no_color: !colors::use_color(),
-            is_tty: colors::is_tty(),
             agent_version,
             rng_seed: None,
             module_root,
@@ -76,8 +71,6 @@ impl BootstrapOptions {
 
     pub fn as_json(&self) -> String {
         let payload = serde_json::json!({
-          "noColor": self.no_color,
-          "isTty": self.is_tty,
           "walletAddress": self.wallet_address,
           "stationId": self.station_id,
           "lassieUrl": format!("http://127.0.0.1:{}/", self.lassie_daemon.port()),
@@ -86,7 +79,7 @@ impl BootstrapOptions {
             None => serde_json::Value::Null,
           },
           "zinniaVersion": self.zinnia_version,
-          "v8Version": deno_core::v8_version(),
+          "v8Version": deno_core::v8::VERSION_STRING,
         });
         serde_json::to_string_pretty(&payload).unwrap()
     }
@@ -106,7 +99,8 @@ pub async fn run_js_module(
     // Initialize a runtime instance
     let mut runtime = JsRuntime::new(RuntimeOptions {
         extensions: vec![
-            // Web Platform APIs implemented by Deno
+            // Web Platform APIs implemented by Deno plus their dependencies
+            deno_telemetry::deno_telemetry::init_ops_and_esm(),
             deno_console::deno_console::init_ops_and_esm(),
             deno_webidl::deno_webidl::init_ops_and_esm(),
             deno_url::deno_url::init_ops_and_esm(),
@@ -119,9 +113,14 @@ pub async fn run_js_module(
                 ..Default::default()
             }),
             deno_crypto::deno_crypto::init_ops_and_esm(bootstrap_options.rng_seed),
+            deno_net::deno_net::init_ops_and_esm::<ZinniaPermissions>(None, None),
+            deno_tls::deno_tls::init_ops_and_esm(),
             // Zinnia-specific APIs
             crate::ext::zinnia_runtime::init_ops_and_esm(reporter),
         ],
+        extension_transpiler: Some(Rc::new(|specifier, source| {
+            crate::vendored::transpile::maybe_transpile_source(specifier, source)
+        })),
         inspector: false,
         module_loader: Some(Rc::new(ZinniaModuleLoader::build(
             bootstrap_options.module_root.clone(),
@@ -130,13 +129,13 @@ pub async fn run_js_module(
     });
 
     let script = format!("bootstrap.mainRuntime({})", bootstrap_options.as_json());
-    runtime.execute_script(located_script_name!(), script.into())?;
+    runtime.execute_script(located_script_name!(), script)?;
 
     // Load and run the module
-    let main_module_id = runtime.load_main_module(module_specifier, None).await?;
+    let main_module_id = runtime.load_main_es_module(module_specifier).await?;
     let res = runtime.mod_evaluate(main_module_id);
-    runtime.run_event_loop(false).await?;
-    res.await??;
+    runtime.run_event_loop(Default::default()).await?;
+    res.await?;
 
     Ok(())
 }
@@ -165,4 +164,10 @@ pub fn lassie_config() -> lassie::DaemonConfig {
 fn validate_station_id(station_id: &str) -> bool {
     static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^[0-9a-fA-F]{88}$").unwrap());
     RE.is_match(station_id)
+}
+
+pub fn exit(code: i32) -> ! {
+    deno_telemetry::flush();
+    #[allow(clippy::disallowed_methods)]
+    std::process::exit(code);
 }

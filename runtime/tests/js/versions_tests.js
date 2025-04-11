@@ -15,5 +15,5 @@ test("Zinnia.versions.zinnia", () => {
 
 test("Zinnia.versions.v8", () => {
   assertArrayIncludes(Object.keys(Zinnia.versions), ["v8"], "Zinnia.versions properties");
-  assertMatch(Zinnia.versions.v8, /^\d+\.\d+\.\d+\.\d+$/);
+  assertMatch(Zinnia.versions.v8, /^\d+\.\d+\.\d+\.\d+-rusty$/);
 });

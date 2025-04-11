@@ -82,8 +82,6 @@ async fn run(config: CliArgs) -> Result<RunOutput> {
         )),
         lassie_daemon: Arc::clone(&lassie_daemon),
         module_root: Some(module_root),
-        no_color: true,
-        is_tty: false,
         rng_seed: None,
     };
 
@@ -118,7 +116,7 @@ fn exit_with_error(error: Error) {
     let error_code = 1;
 
     log::error!("{}", error_string.trim_start_matches("error: "));
-    std::process::exit(error_code);
+    zinnia_runtime::exit(error_code);
 }
 
 fn setup_lassie_tempdir(lassie_temp_dir: &Path) -> Result<()> {
