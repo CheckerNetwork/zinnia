@@ -4,6 +4,7 @@ members = [
     "runtime",
     "cli",
     "daemon",
+    "wasm"
 ]
 
 [workspace.package]
