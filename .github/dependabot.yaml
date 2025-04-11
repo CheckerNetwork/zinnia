@@ -16,8 +16,6 @@ updates:
       Deno:
         patterns:
           - "deno_*"
-    ignore:
-      - dependency-name: "deno_*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
