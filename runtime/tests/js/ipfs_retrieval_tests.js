@@ -2,12 +2,13 @@ import { test } from "zinnia:test";
 import { assertEquals, assertMatch, assertRejects, AssertionError } from "zinnia:assert";
 
 const TEST_CID = "bafkreih25dih6ug3xtj73vswccw423b56ilrwmnos4cbwhrceudopdp5sq";
+const RETRIEVE_FROM_OUR_FRISBII = "?protocol=http&providers=/dns4/frisbii.fly.dev/https";
 const EXPECTED_CAR_SIZE_IN_BYTES = 200;
 const EXPECTED_CAR_BASE64 =
   "OqJlcm9vdHOB2CpYJQABVRIg+ujQf1DbvNP91lYQrc1sPfIXGzGulwQbHiIlBueN/ZRndmVyc2lvbgGLAQFVEiD66NB/UNu80/3WVhCtzWw98hcbMa6XBBseIiUG5439lGxhcGlkYXJ5CmJyYXZvCnJlYWwKcGFyZXNpcwpoaWdoYm9ybgpob3JzZQpib3dlbAphc3Npc3QKY29ybmVhCnB5cmUKVU5JRk9STQpza2lpbmcKc3BpcmUKdXBoZWF2ZQpjcnVtcAo=";
 
 test("can retrieve CID content as a CAR file", async () => {
-  const requestUrl = `ipfs://${TEST_CID}`;
+  const requestUrl = `ipfs://${TEST_CID}${RETRIEVE_FROM_OUR_FRISBII}`;
   const response = await fetch(requestUrl);
   await assertResponseIsOk(response);
 
@@ -21,7 +22,7 @@ test("can retrieve CID content as a CAR file", async () => {
 });
 
 test("can retrieve IPFS content using URL", async () => {
-  const requestUrl = new URL(`ipfs://${TEST_CID}`);
+  const requestUrl = new URL(`ipfs://${TEST_CID}${RETRIEVE_FROM_OUR_FRISBII}`);
   const response = await fetch(requestUrl);
   await assertResponseIsOk(response);
 
@@ -32,7 +33,7 @@ test("can retrieve IPFS content using URL", async () => {
 });
 
 test("can retrieve IPFS content using Fetch Request object", async () => {
-  const request = new Request(`ipfs://${TEST_CID}`);
+  const request = new Request(`ipfs://${TEST_CID}${RETRIEVE_FROM_OUR_FRISBII}`);
   const response = await fetch(request);
   await assertResponseIsOk(response);
 
@@ -43,7 +44,9 @@ test("can retrieve IPFS content using Fetch Request object", async () => {
 });
 
 test("does not modify original request headers - headers initialized as array", async () => {
-  const request = new Request(`ipfs://${TEST_CID}`, { headers: [["X-Test", "true"]] });
+  const request = new Request(`ipfs://${TEST_CID}${RETRIEVE_FROM_OUR_FRISBII}`, {
+    headers: [["X-Test", "true"]],
+  });
   const response = await fetch(request);
   await assertResponseIsOk(response);
 
@@ -51,7 +54,9 @@ test("does not modify original request headers - headers initialized as array", 
 });
 
 test("does not modify original request headers - headers initialized as object", async () => {
-  const request = new Request(`ipfs://${TEST_CID}`, { headers: { "X-Test": "true" } });
+  const request = new Request(`ipfs://${TEST_CID}${RETRIEVE_FROM_OUR_FRISBII}`, {
+    headers: { "X-Test": "true" },
+  });
   const response = await fetch(request);
   await assertResponseIsOk(response);
 
@@ -59,7 +64,9 @@ test("does not modify original request headers - headers initialized as object",
 });
 
 test("does not modify original request headers - headers initialized as Headers", async () => {
-  const request = new Request(`ipfs://${TEST_CID}`, { headers: new Headers({ "X-Test": "true" }) });
+  const request = new Request(`ipfs://${TEST_CID}${RETRIEVE_FROM_OUR_FRISBII}`, {
+    headers: new Headers({ "X-Test": "true" }),
+  });
   const response = await fetch(request);
   await assertResponseIsOk(response);
 
@@ -67,7 +74,9 @@ test("does not modify original request headers - headers initialized as Headers"
 });
 
 test("rejects user-provided Authorization header", async () => {
-  const request = new Request(`ipfs://${TEST_CID}`, { headers: { Authorization: "invalid" } });
+  const request = new Request(`ipfs://${TEST_CID}${RETRIEVE_FROM_OUR_FRISBII}`, {
+    headers: { Authorization: "invalid" },
+  });
 
   let error = await assertRejects(() => fetch(request));
   assertMatch(error.message, /authorization/i);

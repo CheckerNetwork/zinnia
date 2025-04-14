@@ -1,6 +1,8 @@
 // Signal that we are going to start the retrieval
 Zinnia.activity.info("fetch:start");
-const response = await fetch("ipfs://bafybeiazvkej6ou3w6xmva5ed6suonxjv3jkhq4ke73q5hgmcjmf76uos4");
+const response = await fetch(
+  "ipfs://bafybeih5zasorm4tlfga4ztwvm2dlnw6jxwwuvgnokyt3mjamfn3svvpyy?protocol=http&providers=/dns4/frisbii.fly.dev/https",
+);
 
 Zinnia.activity.info("fetch:response-headers");
 
