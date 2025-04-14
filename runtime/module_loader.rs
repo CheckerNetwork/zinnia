@@ -7,8 +7,8 @@ use deno_core::anyhow::anyhow;
 use deno_core::error::ModuleLoaderError;
 use deno_core::futures::FutureExt;
 use deno_core::{
-    resolve_import, ModuleLoadResponse, ModuleLoader, ModuleSource, ModuleSourceCode,
-    ModuleSpecifier, ModuleType, RequestedModuleType, ResolutionKind,
+    resolve_import, ModuleCodeBytes, ModuleLoadResponse, ModuleLoader, ModuleSource,
+    ModuleSourceCode, ModuleSpecifier, ModuleType, RequestedModuleType, ResolutionKind,
 };
 
 use deno_error::JsErrorBox;
@@ -143,6 +143,7 @@ impl ModuleLoader for ZinniaModuleLoader {
                 MediaType::JavaScript => (ModuleType::JavaScript, false),
                 MediaType::TypeScript => (ModuleType::JavaScript, true),
                 MediaType::Json => (ModuleType::Json, false),
+                MediaType::Wasm => (ModuleType::Wasm, false),
                 _ => {
                     return Err(ModuleLoaderError::Unsupported {
                         specifier: module_specifier.into(),
@@ -161,6 +162,17 @@ impl ModuleLoader for ZinniaModuleLoader {
             if module_type == ModuleType::Json && requested_module_type != RequestedModuleType::Json
             {
                 return Err(JsErrorBox::generic("Attempted to load JSON module without specifying \"type\": \"json\" attribute in the import statement.").into());
+            }
+
+            if module_type == ModuleType::Wasm {
+                let code = read_file(&module_path).await?;
+                let module = ModuleSource::new(
+                    module_type,
+                    ModuleSourceCode::Bytes(ModuleCodeBytes::Boxed(code.into_boxed_slice())),
+                    &module_specifier,
+                    None,
+                );
+                return Ok(module);
             }
 
             let code = read_file_to_string(&module_path).await?;
@@ -234,13 +246,18 @@ impl ModuleLoader for ZinniaModuleLoader {
     }
 }
 
-async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, ModuleLoaderError> {
+async fn read_file(path: impl AsRef<Path>) -> Result<Vec<u8>, ModuleLoaderError> {
     let mut f = File::open(&path).await?;
 
     // read the whole file
     let mut buffer = Vec::new();
     f.read_to_end(&mut buffer).await?;
 
+    Ok(buffer)
+}
+
+async fn read_file_to_string(path: impl AsRef<Path>) -> Result<String, ModuleLoaderError> {
+    let buffer = read_file(path).await?;
     Ok(String::from_utf8_lossy(&buffer).to_string())
 }
 
