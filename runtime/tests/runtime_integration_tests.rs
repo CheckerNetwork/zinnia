@@ -132,7 +132,7 @@ async fn source_code_paths_when_inside_module_root() -> Result<(), AnyError> {
     let expected = if cfg!(target_os = "windows") {
         [
             r"import.meta.filename: C:\ZINNIA\tests\js\print_source_code_paths.js",
-            r"import.meta.dirname: C:\ZINNIA\tests/js",
+            r"import.meta.dirname: C:\ZINNIA\tests\js",
             "error stack: at file://C:/ZINNIA/tests/js/print_source_code_paths.js:3:29",
         ]
     } else {
