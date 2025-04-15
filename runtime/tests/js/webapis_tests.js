@@ -28,3 +28,24 @@ test("URL", () => {
   const url = new URL("https://filstation.app");
   assertEquals(url.host, "filstation.app");
 });
+
+test("URL.parse()", () => {
+  // Testcases from https://developer.mozilla.org/en-US/docs/Web/API/URL/parse_static
+
+  // Relative reference to a valid base URL
+  assertEquals(
+    URL.parse("en-US/docs", "https://developer.mozilla.org")?.href,
+    "https://developer.mozilla.org/en-US/docs",
+  );
+
+  // Invalid base URL (missing colon)
+  assertEquals(URL.parse("en-US/docs", "https//developer.mozilla.org"), null);
+});
+
+test("Float16Array", () => {
+  const float16 = new Float16Array([42]);
+  assertEquals(float16[0], 42);
+  assertEquals(float16.length, 1);
+  assertEquals(float16.byteLength, 2);
+  assertEquals(float16.BYTES_PER_ELEMENT, 2);
+});

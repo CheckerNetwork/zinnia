@@ -44,3 +44,9 @@ test("cannot import files over http", async () => {
   let err = await assertRejects(() => import("https://deno.land/std@0.181.0/version.ts"));
   assertMatch(err.message, /Zinnia can import local modules only/);
 });
+
+test("can import WASM files as modules", async () => {
+  const { add } = await import("./module_fixtures/math.wasm");
+  const result = add(2, 3);
+  assertEquals(result, 5);
+});
