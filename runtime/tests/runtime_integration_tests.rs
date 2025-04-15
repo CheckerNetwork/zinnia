@@ -129,13 +129,22 @@ async fn source_code_paths_when_inside_module_root() -> Result<(), AnyError> {
         return Err(err);
     }
 
-    assert_eq!(
+    let expected = if cfg!(target_os = "windows") {
         [
-            "import.meta.filename: /tests/js/print_source_code_paths.js",
-            "import.meta.dirname: /tests/js",
-            "error stack: at file:///tests/js/print_source_code_paths.js:3:29",
+            r"import.meta.filename: C:\ZINNIA\tests\js\print_source_code_paths.js",
+            r"import.meta.dirname: C:\ZINNIA\tests/js",
+            "error stack: at file://C:/ZINNIA/tests/js/print_source_code_paths.js:3:29",
         ]
-        .map(|msg| { format!("console.info: {msg}\n") }),
+    } else {
+        [
+            "import.meta.filename: /ZINNIA/tests/js/print_source_code_paths.js",
+            "import.meta.dirname: /ZINNIA/tests/js",
+            "error stack: at file:///ZINNIA/tests/js/print_source_code_paths.js:3:29",
+        ]
+    };
+
+    assert_eq!(
+        expected.map(|msg| { format!("console.info: {msg}\n") }),
         activities.as_slice(),
     );
     Ok(())

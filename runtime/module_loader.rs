@@ -135,8 +135,13 @@ impl ModuleLoader for ZinniaModuleLoader {
                         );
                         ModuleLoaderError::from(JsErrorBox::generic(msg))
                     })?;
-                sandboxed_path = Path::new(r"/").join(relative_path).to_owned();
-                // sandboxed_path = PathBuf::from_str(r".").push(relative_path);
+
+                let virtual_root = if cfg!(target_os = "windows") {
+                    r"C:\ZINNIA"
+                } else {
+                    r"/ZINNIA"
+                };
+                sandboxed_path = Path::new(virtual_root).join(relative_path).to_owned();
             } else {
                 sandboxed_path = module_path.to_owned();
             };
