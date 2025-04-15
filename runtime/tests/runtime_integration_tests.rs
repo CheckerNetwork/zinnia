@@ -3,7 +3,7 @@
 //   ./target/debug/zinnia run runtime/tests/js/timers_tests.js
 // Most of the tests should pass on Deno too!
 //   deno run runtime/tests/js/timers_tests.js
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use anyhow::{anyhow, Context};
@@ -94,8 +94,62 @@ js_tests!(ipfs_retrieval_tests);
 test_runner_tests!(passing_tests);
 test_runner_tests!(failing_tests expect_failure);
 
+#[tokio::test]
+async fn source_code_paths_when_no_module_root() -> Result<(), AnyError> {
+    let (activities, run_error) =
+        run_js_test_file_with_module_root("print_source_code_paths.js", None).await?;
+    if let Some(err) = run_error {
+        return Err(err);
+    }
+
+    let base_dir = get_base_dir();
+    let dirname = base_dir.to_str().unwrap().to_string();
+
+    let filename = Path::join(&base_dir, "print_source_code_paths.js").to_owned();
+    let filename = filename.to_str().unwrap().to_string();
+
+    assert_eq!(
+        [
+            format!("import.meta.filename: {filename}"),
+            format!("import.meta.dirname: {dirname}"),
+            format!("error stack: at file://{dirname}/print_source_code_paths.js:3:29"),
+        ]
+        .map(|msg| { format!("console.info: {msg}\n") }),
+        activities.as_slice(),
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn source_code_paths_when_inside_module_root() -> Result<(), AnyError> {
+    let module_root = Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
+    let (activities, run_error) =
+        run_js_test_file_with_module_root("print_source_code_paths.js", module_root).await?;
+    if let Some(err) = run_error {
+        return Err(err);
+    }
+
+    assert_eq!(
+        [
+            "import.meta.filename: /tests/js/print_source_code_paths.js",
+            "import.meta.dirname: /tests/js",
+            "error stack: at file:///tests/js/print_source_code_paths.js:3:29",
+        ]
+        .map(|msg| { format!("console.info: {msg}\n") }),
+        activities.as_slice(),
+    );
+    Ok(())
+}
+
 // Run all tests in a single JS file
 async fn run_js_test_file(name: &str) -> Result<(Vec<String>, Option<AnyError>), AnyError> {
+    run_js_test_file_with_module_root(name, None).await
+}
+
+async fn run_js_test_file_with_module_root(
+    name: &str,
+    module_root: Option<PathBuf>,
+) -> Result<(Vec<String>, Option<AnyError>), AnyError> {
     let _ = env_logger::builder().is_test(true).try_init();
 
     let mut full_path = get_base_dir();
@@ -110,7 +164,7 @@ async fn run_js_test_file(name: &str) -> Result<(Vec<String>, Option<AnyError>),
         format!("zinnia_runtime_tests/{}", env!("CARGO_PKG_VERSION")),
         reporter.clone(),
         helpers::lassie_daemon(),
-        None,
+        module_root,
     );
     let run_result = run_js_module(&main_module, &config).await;
     let events = reporter.events.take();
