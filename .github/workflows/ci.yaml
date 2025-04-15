@@ -177,10 +177,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actionsx/prettier@3d9f7c3fa44c9cb819e68292a328d7f4384be206 # latest
-        with:
-          # prettier CLI arguments.
-          args: --check .
+      - uses: actions/setup-node@v4
+      - run: npx prettier --check .
 
   validate_pr_title:
     name: Validate PR title
