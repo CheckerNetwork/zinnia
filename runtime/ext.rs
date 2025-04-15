@@ -56,6 +56,19 @@ impl NetPermissions for ZinniaPermissions {
         ))
     }
 
+    fn check_vsock(
+        &mut self,
+        _cid: u32,
+        _port: u32,
+        _api_name: &str,
+    ) -> std::result::Result<(), PermissionCheckError> {
+        Err(PermissionCheckError::PermissionDenied(
+            PermissionDeniedError::Fatal {
+                access: "linux_vsock".into(),
+            },
+        ))
+    }
+
     fn check_read(
         &mut self,
         _p: &str,
