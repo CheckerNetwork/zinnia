@@ -38,3 +38,8 @@ test("Response", async () => {
   const response = new Response();
   await response.arrayBuffer();
 });
+
+test("Response.bytes()", async () => {
+  const response = new Response();
+  await response.bytes();
+});
