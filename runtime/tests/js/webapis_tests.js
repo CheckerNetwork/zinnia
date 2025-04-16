@@ -51,7 +51,7 @@ test("Float16Array", () => {
 });
 
 test("import.meta.filename", () => {
-  const value = import.meta.filename.replace("\\", "/");
+  const value = import.meta.filename.replaceAll("\\", "/");
   const expectedSuffix = "/runtime/tests/js/webapis_tests.js";
   assert(
     value.endsWith(expectedSuffix),
@@ -60,7 +60,7 @@ test("import.meta.filename", () => {
 });
 
 test("import.meta.dirname", () => {
-  const value = import.meta.dirname.replace("\\", "/");
+  const value = import.meta.dirname.replaceAll("\\", "/");
   const expectedSuffix = "/runtime/tests/js";
   assert(
     value.endsWith(expectedSuffix),
