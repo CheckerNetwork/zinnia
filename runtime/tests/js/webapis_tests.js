@@ -51,6 +51,9 @@ test("Float16Array", () => {
 });
 
 test("import.meta.filename", () => {
+  // Test that `import.meta.filename` is provided by the runtime and contains the expected file path.
+  // We don't know the absolute location of the file `runtime/tests/js/webapis_test.js`, therefore
+  // we check only the suffix (the path relative to the repository root).
   const value = import.meta.filename.replaceAll("\\", "/");
   const expectedSuffix = "/runtime/tests/js/webapis_tests.js";
   assert(
@@ -60,6 +63,9 @@ test("import.meta.filename", () => {
 });
 
 test("import.meta.dirname", () => {
+  // Test that `import.meta.dirname` is provided by the runtime and contains the expected directory path.
+  // We don't know the absolute location of the directory `runtime/tests/js`, therefore we check only the
+  // suffix (the path relative to the repository root).
   const value = import.meta.dirname.replaceAll("\\", "/");
   const expectedSuffix = "/runtime/tests/js";
   assert(
