@@ -104,10 +104,9 @@ async fn source_code_paths_when_no_module_root() -> Result<(), AnyError> {
 
     let base_dir = get_base_dir();
     let dirname = base_dir.to_str().unwrap().to_string();
-
     let filename = Path::join(&base_dir, "print_source_code_paths.js").to_owned();
     let filename = filename.to_str().unwrap().to_string();
-    let module_url = ModuleSpecifier::from_file_path(filename).unwrap();
+    let module_url = ModuleSpecifier::from_file_path(&filename).unwrap();
 
     assert_eq!(
         [
