@@ -13,7 +13,7 @@ authors = ["CheckerNetwork"]
 repository = "https://github.com/CheckerNetwork/zinnia"
 
 [workspace.dependencies]
-assert_cmd = "2.0.16"
+assert_cmd = "2.0.17"
 assert_fs = "1.1.2"
 console_static_text = "=0.8.1"
 deno_core = "0.343.0"
