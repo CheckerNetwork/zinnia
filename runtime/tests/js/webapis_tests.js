@@ -1,5 +1,5 @@
 import { test } from "zinnia:test";
-import { assertEquals } from "zinnia:assert";
+import { assert, assertEquals } from "zinnia:assert";
 
 test("AbortController", () => {
   assertEquals(typeof AbortController, "function", "typeof AbortController");
@@ -48,4 +48,22 @@ test("Float16Array", () => {
   assertEquals(float16.length, 1);
   assertEquals(float16.byteLength, 2);
   assertEquals(float16.BYTES_PER_ELEMENT, 2);
+});
+
+test("import.meta.filename", () => {
+  const value = import.meta.filename.replaceAll("\\", "/");
+  const expectedSuffix = "/runtime/tests/js/webapis_tests.js";
+  assert(
+    value.endsWith(expectedSuffix),
+    `Expected import.meta.filename to end with ${expectedSuffix}. Actual value: ${value}`,
+  );
+});
+
+test("import.meta.dirname", () => {
+  const value = import.meta.dirname.replaceAll("\\", "/");
+  const expectedSuffix = "/runtime/tests/js";
+  assert(
+    value.endsWith(expectedSuffix),
+    `Expected import.meta.filename to end with ${expectedSuffix}. Actual value: ${value}`,
+  );
 });
