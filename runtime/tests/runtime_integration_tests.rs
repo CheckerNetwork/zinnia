@@ -110,7 +110,7 @@ async fn typescript_stack_trace_test() -> Result<(), AnyError> {
         let cwd_url = ModuleSpecifier::from_file_path(std::env::current_dir().unwrap()).unwrap();
         let actual_error = actual_error.replace(cwd_url.as_str(), "file:///project-root");
         // Normalize line endings to Unix style (LF only)
-        let actual_error = actual_error.replace("\r\n", "\n")
+        let actual_error = actual_error.replace("\r\n", "\n");
 
         let expected_error = r#"
 Uncaught (in promise) Error
