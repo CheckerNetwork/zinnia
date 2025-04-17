@@ -8,6 +8,7 @@ use std::rc::Rc;
 
 use anyhow::{anyhow, Context};
 use deno_core::ModuleSpecifier;
+use zinnia_runtime::fmt_errors::format_js_error;
 use zinnia_runtime::{any_and_jserrorbox_downcast_ref, CoreError, RecordingReporter};
 use zinnia_runtime::{anyhow, deno_core, run_js_module, AnyError, BootstrapOptions};
 
@@ -93,6 +94,34 @@ js_tests!(ipfs_retrieval_tests);
 
 test_runner_tests!(passing_tests);
 test_runner_tests!(failing_tests expect_failure);
+
+#[tokio::test]
+async fn typescript_stack_trace_test() -> Result<(), AnyError> {
+    let (_, run_error) = run_js_test_file("typescript_fixtures/typescript_stack_trace.ts").await?;
+    let error = run_error.ok_or_else(|| {
+        anyhow!("The script was expected to throw an error. Success was reported instead.")
+    })?;
+
+    if let Some(CoreError::Js(e)) = any_and_jserrorbox_downcast_ref::<CoreError>(&error) {
+        let actual_error = format_js_error(e);
+        // Strip ANSI codes (colors, styles)
+        let actual_error = console_static_text::ansi::strip_ansi_codes(&actual_error);
+        // Replace current working directory in stack trace file paths with a fixed placeholder
+        let cwd_url = ModuleSpecifier::from_file_path(std::env::current_dir().unwrap()).unwrap();
+        let actual_error = actual_error.replace(cwd_url.as_str(), "file:///project-root");
+
+        let expected_error = r#"
+Uncaught (in promise) Error
+const error: Error = new Error(); throw error;
+                     ^
+    at file:///project-root/tests/js/typescript_fixtures/typescript_stack_trace.ts:14:22
+"#;
+        assert_eq!(actual_error.trim(), expected_error.trim());
+    } else {
+        panic!("The script threw unexpected error: {}", error);
+    }
+    Ok(())
+}
 
 // Run all tests in a single JS file
 async fn run_js_test_file(name: &str) -> Result<(Vec<String>, Option<AnyError>), AnyError> {
