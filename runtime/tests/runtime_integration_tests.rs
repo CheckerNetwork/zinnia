@@ -107,12 +107,13 @@ async fn source_code_paths_when_no_module_root() -> Result<(), AnyError> {
 
     let filename = Path::join(&base_dir, "print_source_code_paths.js").to_owned();
     let filename = filename.to_str().unwrap().to_string();
+    let module_url = ModuleSpecifier::from_file_path(filename).unwrap();
 
     assert_eq!(
         [
             format!("import.meta.filename: {filename}"),
             format!("import.meta.dirname: {dirname}"),
-            format!("error stack: at file://{dirname}/print_source_code_paths.js:3:29"),
+            format!("error stack: at {module_url}:3:29"),
         ]
         .map(|msg| { format!("console.info: {msg}\n") }),
         activities.as_slice(),
@@ -133,7 +134,7 @@ async fn source_code_paths_when_inside_module_root() -> Result<(), AnyError> {
         [
             r"import.meta.filename: C:\ZINNIA\tests\js\print_source_code_paths.js",
             r"import.meta.dirname: C:\ZINNIA\tests\js",
-            "error stack: at file://C:/ZINNIA/tests/js/print_source_code_paths.js:3:29",
+            "error stack: at file:///C:/ZINNIA/tests/js/print_source_code_paths.js:3:29",
         ]
     } else {
         [
