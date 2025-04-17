@@ -10,5 +10,5 @@ interface User {
 // between the TypeScript original and the transpiled code.
 //
 // Throw the error so that the test can verify source code line & column numbers
-// in the stack trace frames but also the line throwing the exception.
+// in the stack trace frames but also the source code of the line throwing the exception.
 const error: Error = new Error(); throw error;
