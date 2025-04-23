@@ -68,7 +68,7 @@ Verification steps (assuming Apple Silicon/arm64 machine):
    Run some JavaScript to test V8 low-level stuff:
 
    ```
-   root@33a680b31043:/# echo 'console.log(await fetch('https://github.com/'))' > test.js
+   root@33a680b31043:/# echo 'console.log(await fetch("https://github.com/"))' > test.js
    root@33a680b31043:/# /archives/zinnia run test.js
    Response {
      status: 200,
