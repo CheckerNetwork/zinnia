@@ -28,6 +28,11 @@ pub struct ZinniaModuleLoader {
     source_maps: Rc<RefCell<HashMap<String, Vec<u8>>>>,
 }
 
+#[cfg(target_os = "windows")]
+const VIRTUAL_ROOT: &str = r"C:\ZINNIA";
+#[cfg(not(target_os = "windows"))]
+const VIRTUAL_ROOT: &str = r"/ZINNIA";
+
 impl ZinniaModuleLoader {
     pub fn build(module_root: Option<PathBuf>) -> Result<Self> {
         let module_root = match module_root {
@@ -40,6 +45,61 @@ impl ZinniaModuleLoader {
             module_root,
             code_cache: Rc::new(RefCell::new(HashMap::new())),
             source_maps: Rc::new(RefCell::new(HashMap::new())),
+        })
+    }
+
+    fn maybe_map_virtual_path(
+        &self,
+        module_specifier: ModuleSpecifier,
+    ) -> Result<ModuleSpecifier, ModuleLoaderError> {
+        println!("maybe_map_virtual_path {module_specifier}");
+        let module_root = match &self.module_root {
+            // If we are not sandboxing the paths, then return the module specifier as-is.
+            None => {
+                println!("no module root");
+                return Ok(module_specifier);
+            }
+            Some(value) => value,
+        };
+        println!("module_root: {}", module_root.display());
+
+        if module_specifier.scheme() != "file" {
+            // This is not a file path, return it as-is.
+            println!("not a file scheme");
+            return Ok(module_specifier);
+        }
+
+        let module_path = match module_specifier.to_file_path() {
+            // The module specifier is not a valid file path, return it as-is
+            // and let other components to deal with the problem.
+            Err(_) => {
+                println!("invalid file path");
+                return Ok(module_specifier);
+            }
+            Ok(value) => value,
+        };
+        println!("module path: {module_path:?}");
+
+        let relative_path = match module_path.strip_prefix(VIRTUAL_ROOT) {
+            Err(_) => {
+                println!("outside of the virtual root");
+                // The path is outside the virtual root, return it as-is.
+                return Ok(module_specifier);
+            }
+            Ok(value) => value,
+        };
+        println!("relative path: {}", relative_path.display());
+
+        let resolved_path = Path::join(&module_root, relative_path);
+        println!("resolved path: {}", resolved_path.display());
+
+        ModuleSpecifier::from_file_path(resolved_path).map_err(|_| {
+            println!("cannot map {} to module specifier", relative_path.display());
+            let msg = format!(
+                "Unexpected error while mapping {} to real path.",
+                module_specifier
+            );
+            ModuleLoaderError::from(JsErrorBox::generic(msg))
         })
     }
 }
@@ -69,8 +129,15 @@ impl ModuleLoader for ZinniaModuleLoader {
             );
         }
 
+        println!(
+            "resolve {specifier} from {referrer}\n{}",
+            std::backtrace::Backtrace::capture()
+        );
+
         let resolved = resolve_import(specifier, referrer)?;
-        Ok(resolved)
+        self.maybe_map_virtual_path(resolved)
+            .inspect(|r| println!("resolved {specifier} to {r}"))
+            .inspect_err(|e| println!("error resolving {specifier}: {e}"))
     }
 
     fn load(
@@ -80,6 +147,10 @@ impl ModuleLoader for ZinniaModuleLoader {
         _is_dyn_import: bool,
         requested_module_type: RequestedModuleType,
     ) -> ModuleLoadResponse {
+        println!(
+            "loading {module_specifier}\n{}",
+            std::backtrace::Backtrace::capture()
+        );
         let module_specifier = module_specifier.clone();
         let module_root = self.module_root.clone();
         let maybe_referrer = maybe_referrer.cloned();
@@ -142,12 +213,7 @@ impl ModuleLoader for ZinniaModuleLoader {
                         ModuleLoaderError::from(JsErrorBox::generic(msg))
                     })?;
 
-                let virtual_root = if cfg!(target_os = "windows") {
-                    r"C:\ZINNIA"
-                } else {
-                    r"/ZINNIA"
-                };
-                sandboxed_path = Path::new(virtual_root).join(relative_path).to_owned();
+                sandboxed_path = Path::new(VIRTUAL_ROOT).join(relative_path).to_owned();
             } else {
                 sandboxed_path = module_path.to_owned();
             };
