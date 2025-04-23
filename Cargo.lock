@@ -5831,7 +5831,7 @@ dependencies = [
 
 [[package]]
 name = "zinnia"
-version = "0.22.0"
+version = "0.22.1"
 dependencies = [
  "assert_cmd",
  "assert_fs",
@@ -5847,7 +5847,7 @@ dependencies = [
 
 [[package]]
 name = "zinnia_runtime"
-version = "0.22.0"
+version = "0.22.1"
 dependencies = [
  "assert_fs",
  "chrono",
@@ -5882,7 +5882,7 @@ dependencies = [
 
 [[package]]
 name = "zinniad"
-version = "0.22.0"
+version = "0.22.1"
 dependencies = [
  "assert_cmd",
  "assert_fs",
