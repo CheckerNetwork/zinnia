@@ -1,10 +1,10 @@
 name: Continuous integration
 
 on:
-  # pull_request:
+  pull_request:
   push:
     branches:
-      - none
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
