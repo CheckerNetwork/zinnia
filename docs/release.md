@@ -35,3 +35,42 @@ refer to `X.Y.Z` as _major_, _minor_ and _patch_ version.
    changes.
 
 1. Click on the green button `Publish release`
+
+## Testing the release build pipeline
+
+### Linux binaries
+
+We need to link the Linux binaries with a glibc version that's compatible with the target system, e.g. the Node.js docker image used by Checker Node.
+
+Verification steps (assuming Apple Silicon/arm64 machine):
+
+1. Download the "archives" for your platform (e.g. arm64 for Apple Silicon chips) from the GitHub Actions workflow run, e.g. https://github.com/filecoin-station/zinnia/actions/runs/4687576517
+
+2. Extract the archive, then extract the `zinnia` & `zinniad` archives.
+
+3. Assuming you have the extracted files in `~/Downloads/archives-linux-arm64`, run the following Docker command:
+
+   ```
+   ❯ docker run -it --entrypoint /bin/bash -v ~/Downloads/archives-linux-arm64:/archives ubuntu:focal
+   ```
+
+   _Note: This command uses the Ubuntu version Focal Fossa (20.04), which was the oldest Ubuntu LTS version with standard support at the time of writing this document._
+
+4. Then, inside the running Docker container.
+
+   Smoke test:
+
+   ```
+   root@33a680b31043:/# /archives/zinniad --version
+   zinniad 0.22.0
+   ```
+
+   Run some JavaScript to test V8 low-level stuff:
+
+   ```
+   root@33a680b31043:/# echo 'console.log(await fetch('https://github.com/'))' > test.js
+   root@33a680b31043:/# /archives/zinnia run test.js
+   Response {
+     status: 200,
+   (...)
+   ```
