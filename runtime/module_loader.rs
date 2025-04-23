@@ -1,6 +1,8 @@
+use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
+use std::rc::Rc;
 
 use deno_ast::{MediaType, ParseParams};
 use deno_core::anyhow::anyhow;
@@ -21,7 +23,9 @@ use deno_core::anyhow::Result;
 pub struct ZinniaModuleLoader {
     module_root: Option<PathBuf>,
     // Cache mapping file_name to source_code
-    code_cache: Arc<RwLock<HashMap<String, String>>>,
+    code_cache: Rc<RefCell<HashMap<String, String>>>,
+    // Cache mapping module_specifier string to source_map bytes
+    source_maps: Rc<RefCell<HashMap<String, Vec<u8>>>>,
 }
 
 impl ZinniaModuleLoader {
@@ -34,7 +38,8 @@ impl ZinniaModuleLoader {
 
         Ok(Self {
             module_root,
-            code_cache: Arc::new(RwLock::new(HashMap::new())),
+            code_cache: Rc::new(RefCell::new(HashMap::new())),
+            source_maps: Rc::new(RefCell::new(HashMap::new())),
         })
     }
 }
@@ -79,6 +84,7 @@ impl ModuleLoader for ZinniaModuleLoader {
         let module_root = self.module_root.clone();
         let maybe_referrer = maybe_referrer.cloned();
         let code_cache = self.code_cache.clone();
+        let source_maps = self.source_maps.clone();
         let module_load = async move {
             let spec_str = module_specifier.as_str();
 
@@ -188,6 +194,10 @@ impl ModuleLoader for ZinniaModuleLoader {
 
             let code = read_file_to_string(&module_path).await?;
 
+            code_cache
+                .borrow_mut()
+                .insert(spec_str.to_string(), code.clone());
+
             let code = if should_transpile {
                 let parsed = deno_ast::parse_module(ParseParams {
                     specifier: module_specifier.clone(),
@@ -198,7 +208,7 @@ impl ModuleLoader for ZinniaModuleLoader {
                     maybe_syntax: None,
                 })
                 .map_err(JsErrorBox::from_err)?;
-                parsed
+                let res = parsed
                     .transpile(
                         &deno_ast::TranspileOptions {
                             imports_not_used_as_values: deno_ast::ImportsNotUsedAsValues::Error,
@@ -206,21 +216,25 @@ impl ModuleLoader for ZinniaModuleLoader {
                             ..Default::default()
                         },
                         &Default::default(),
-                        &Default::default(),
+                        &deno_ast::EmitOptions {
+                            source_map: deno_ast::SourceMapOption::Separate,
+                            inline_sources: true,
+                            ..Default::default()
+                        },
                     )
                     .map_err(JsErrorBox::from_err)?
-                    .into_source()
-                    .text
+                    .into_source();
+
+                if let Some(source_map) = res.source_map {
+                    source_maps
+                        .borrow_mut()
+                        .insert(module_specifier.to_string(), source_map.into_bytes());
+                }
+
+                res.text
             } else {
                 code
             };
-
-            code_cache
-                .write()
-                .map_err(|_| {
-                    JsErrorBox::generic("Unexpected internal error: code_cache lock was poisoned")
-                })?
-                .insert(spec_str.to_string(), code.clone());
 
             let sandboxed_module_specifier = ModuleSpecifier::from_file_path(&sandboxed_path)
                 .map_err(|_| {
@@ -245,9 +259,16 @@ impl ModuleLoader for ZinniaModuleLoader {
         ModuleLoadResponse::Async(module_load.boxed_local())
     }
 
+    fn get_source_map(&self, specifier: &str) -> Option<Cow<[u8]>> {
+        self.source_maps
+            .borrow()
+            .get(specifier)
+            .map(|v| v.clone().into())
+    }
+
     fn get_source_mapped_source_line(&self, file_name: &str, line_number: usize) -> Option<String> {
         log::debug!("get_source_mapped_source_line {file_name}:{line_number}");
-        let code_cache = self.code_cache.read().ok()?;
+        let code_cache = self.code_cache.borrow();
         let code = code_cache.get(file_name)?;
 
         // Based on Deno cli/module_loader.rs
