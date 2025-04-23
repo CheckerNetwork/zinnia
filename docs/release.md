@@ -42,7 +42,7 @@ refer to `X.Y.Z` as _major_, _minor_ and _patch_ version.
 
 We need to link the Linux binaries with a glibc version that's compatible with the target system, e.g. the Node.js docker image used by Checker Node.
 
-Verification steps (assuming Apple Silicon/arm64 machine):
+Verification steps:
 
 1. Download the "archives" for your platform (e.g. arm64 for Apple Silicon chips) from the GitHub Actions workflow run, e.g. https://github.com/filecoin-station/zinnia/actions/runs/4687576517
 
