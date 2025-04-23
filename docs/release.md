@@ -51,10 +51,10 @@ Verification steps (assuming Apple Silicon/arm64 machine):
 3. Assuming you have the extracted files in `~/Downloads/archives-linux-arm64`, run the following Docker command:
 
    ```
-   ❯ docker run -it --entrypoint /bin/bash -v ~/Downloads/archives-linux-arm64:/archives ubuntu:focal
+   ❯ docker run -it --entrypoint /bin/bash -v ~/Downloads/archives-linux-arm64:/archives node:20
    ```
 
-   _Note: This command uses the Ubuntu version Focal Fossa (20.04), which was the oldest Ubuntu LTS version with standard support at the time of writing this document._
+   _Note: This command uses the official Node.js docker image for the Node.js version 20 (LTS)._
 
 4. Then, inside the running Docker container.
 
