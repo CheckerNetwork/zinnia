@@ -1,13 +1,10 @@
 # See https://github.com/rustsec/rustsec/blob/main/cargo-audit/audit.toml.example
 [advisories]
 ignore = [
-  # Double Public Key Signing Function Oracle Attack on `ed25519-dalek`
-  # https://rustsec.org/advisories/RUSTSEC-2022-0093
-  # Note(bajtos): We don't use ed25510-dalek in Zinnia AFAIK
-  "RUSTSEC-2022-0093",
-  # webpki: CPU denial of service in certificate path building
-  # https://rustsec.org/advisories/RUSTSEC-2023-0052
-  # Note(bajtos): This dependency is used by deno_fetch
-  # and there is no upgrade available to fix this issue :shrug:
-  "RUSTSEC-2023-0052",
+  # Marvin Attack: potential key recovery through timing sidechannels
+  # We don't share any RSA keys with Zinnia modules
+  "RUSTSEC-2023-0071",
+  # paste - no longer maintained
+  # This is a dependency of Deno/v8, we have to wait for Deno to fix this
+  "RUSTSEC-2024-0436"
 ]
