@@ -114,8 +114,6 @@ impl ModuleLoader for ZinniaModuleLoader {
                 ModuleLoaderError::from(JsErrorBox::generic(msg))
             })?;
 
-            let sandboxed_path: PathBuf;
-
             // Check that the module path is inside the module root directory
             if let Some(canonical_root) = &module_root {
                 // Resolve any symlinks inside the path to prevent modules from escaping our sandbox
@@ -128,28 +126,19 @@ impl ModuleLoader for ZinniaModuleLoader {
                     ModuleLoaderError::from(JsErrorBox::generic(msg))
                 })?;
 
-                let relative_path =
-                    canonical_module.strip_prefix(canonical_root).map_err(|_| {
-                        let msg = format!(
-                            "Cannot import files outside of the module root directory.\n\
+                if !canonical_module.starts_with(canonical_root) {
+                    let msg = format!(
+                        "Cannot import files outside of the module root directory.\n\
                          Root directory (canonical): {}\n\
                          Module file path (canonical): {}\
                          {}",
-                            canonical_root.display(),
-                            canonical_module.display(),
-                            details()
-                        );
-                        ModuleLoaderError::from(JsErrorBox::generic(msg))
-                    })?;
+                        canonical_root.display(),
+                        canonical_module.display(),
+                        details()
+                    );
 
-                let virtual_root = if cfg!(target_os = "windows") {
-                    r"C:\ZINNIA"
-                } else {
-                    r"/ZINNIA"
-                };
-                sandboxed_path = Path::new(virtual_root).join(relative_path).to_owned();
-            } else {
-                sandboxed_path = module_path.to_owned();
+                    return Err(ModuleLoaderError::from(JsErrorBox::generic(msg)));
+                }
             };
 
             // Based on https://github.com/denoland/roll-your-own-javascript-runtime
@@ -236,20 +225,10 @@ impl ModuleLoader for ZinniaModuleLoader {
                 code
             };
 
-            let sandboxed_module_specifier = ModuleSpecifier::from_file_path(&sandboxed_path)
-                .map_err(|_| {
-                    let msg = format!(
-                        "Internal error: cannot convert relative path to module specifier: {}\n{}",
-                        sandboxed_path.display(),
-                        details()
-                    );
-                    ModuleLoaderError::from(JsErrorBox::generic(msg))
-                })?;
-
             let module = ModuleSource::new(
                 module_type,
                 ModuleSourceCode::String(code.into()),
-                &sandboxed_module_specifier,
+                &module_specifier,
                 None,
             );
 
