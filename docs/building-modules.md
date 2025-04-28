@@ -225,12 +225,6 @@ Tracking issue: n/a
 - [Worker](https://developer.mozilla.org/en-US/docs/Web/API/Worker)
 - [caches](https://developer.mozilla.org/en-US/docs/Web/API/caches)
 
-#### WebSockets Standard
-
-Tracking issue: n/a
-
-- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
-
 #### Other
 
 - `XMLHttpRequest` Standard
