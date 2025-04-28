@@ -33,6 +33,7 @@ See [example modules](../examples) for more advanced examples.
 ## Table of Contents
 
 - [Importing JavaScript Modules](#importing-javascript-modules)
+- [Working with WebAssembly](#working-with-webassembly)
 - [Platform APIs](#platform-apis)
 - [Testing Guide](#testing-guide)
 
@@ -84,6 +85,18 @@ import { format } from "../lib.js";
 // This will be rejected
 import * as code from "../../other/code.js";
 ```
+
+## Working with WebAssembly
+
+Zinnia can directly import functions exported by WebAssembly modules.
+
+```js
+import { add } from "./math.wasm";
+console.log(add(1, 2));
+```
+
+We are looking for feedback from the community to improve the WASM support. Join the discussion on
+GitHub in [zinnia#74](https://github.com/CheckerNetwork/zinnia/issues/74).
 
 ## Platform APIs
 
