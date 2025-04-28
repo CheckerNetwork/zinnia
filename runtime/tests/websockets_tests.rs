@@ -44,7 +44,7 @@ const result = await promise;
 socket.close();
 assertStrictEquals(result, "Hello Server!");
 "#
-        .replace(&"SERVER_PORT", &server_port.to_string()),
+        .replace("SERVER_PORT", &server_port.to_string()),
     )?;
 
     let main_module = deno_core::resolve_path(

@@ -92,7 +92,7 @@ js_tests!(station_reporting_tests check_activity);
 js_tests!(module_loader_tests);
 js_tests!(fetch_tests);
 js_tests!(ipfs_retrieval_tests);
-js_tests!(websockets_integration_tests);
+js_tests!(websockets_tests);
 
 test_runner_tests!(passing_tests);
 test_runner_tests!(failing_tests expect_failure);
