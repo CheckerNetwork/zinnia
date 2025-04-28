@@ -10,6 +10,7 @@ use deno_fetch::{FetchPermissions, FsError};
 use deno_net::NetPermissions;
 use deno_permissions::{PermissionCheckError, PermissionDeniedError};
 use deno_web::TimersPermission;
+use deno_websocket::WebSocketPermissions;
 
 use crate::Reporter;
 
@@ -103,6 +104,16 @@ impl NetPermissions for ZinniaPermissions {
                 access: "filesystem".into(),
             },
         ))
+    }
+}
+
+impl WebSocketPermissions for ZinniaPermissions {
+    fn check_net_url(
+        &mut self,
+        _url: &deno_core::url::Url,
+        _api_name: &str,
+    ) -> std::result::Result<(), PermissionCheckError> {
+        Ok(())
     }
 }
 

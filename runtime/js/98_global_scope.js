@@ -18,6 +18,7 @@ import * as headers from "ext:deno_fetch/20_headers.js";
 import * as streams from "ext:deno_web/06_streams.js";
 // import * as fileReader from "ext:deno_web/10_filereader.js";
 // import * as file from "ext:deno_web/09_file.js";
+import * as webSocket from "ext:deno_websocket/01_websocket.js";
 import * as formData from "ext:deno_fetch/21_formdata.js";
 import * as request from "ext:deno_fetch/23_request.js";
 import * as response from "ext:deno_fetch/23_response.js";
@@ -79,8 +80,7 @@ const windowOrWorkerGlobalScope = {
   URL: core.propNonEnumerable(url.URL),
   URLPattern: core.propNonEnumerable(urlPattern.URLPattern),
   URLSearchParams: core.propNonEnumerable(url.URLSearchParams),
-  // See https://github.com/CheckerNetwork/zinnia/issues/704
-  // WebSocket: core.propNonEnumerable(webSocket.WebSocket),
+  WebSocket: core.propNonEnumerable(webSocket.WebSocket),
   // Intentionally disabled until we need this.
   // https://github.com/CheckerNetwork/zinnia/issues/725
   // MessageChannel: core.propNonEnumerable(messagePort.MessageChannel),

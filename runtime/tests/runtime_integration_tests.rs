@@ -14,7 +14,8 @@ use zinnia_runtime::{anyhow, deno_core, run_js_module, AnyError, BootstrapOption
 
 use pretty_assertions::assert_eq;
 
-mod helpers;
+mod lassie_daemon;
+use lassie_daemon::lassie_daemon;
 
 macro_rules! js_tests(
     ( $name:ident ) => {
@@ -91,6 +92,7 @@ js_tests!(station_reporting_tests check_activity);
 js_tests!(module_loader_tests);
 js_tests!(fetch_tests);
 js_tests!(ipfs_retrieval_tests);
+js_tests!(websockets_tests);
 
 test_runner_tests!(passing_tests);
 test_runner_tests!(failing_tests expect_failure);
@@ -227,7 +229,7 @@ async fn run_js_test_file_with_module_root(
     let config = BootstrapOptions::new(
         format!("zinnia_runtime_tests/{}", env!("CARGO_PKG_VERSION")),
         reporter.clone(),
-        helpers::lassie_daemon(),
+        lassie_daemon(),
         module_root,
     );
     let run_result = run_js_module(&main_module, &config).await;
