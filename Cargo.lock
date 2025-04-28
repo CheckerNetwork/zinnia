@@ -407,6 +407,12 @@ checksum = "022dfe9eb35f19ebbcb51e0b40a5ab759f46ad60cadf7297e0bd085afb50e076"
 
 [[package]]
 name = "base64"
+version = "0.21.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
+
+[[package]]
+name = "base64"
 version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
@@ -969,7 +975,7 @@ version = "0.46.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cef7f606485e5e5fdee9946d5822de9242d8143da9beb1c32cbaf2e8dd1ef025"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "capacity_builder",
  "deno_error",
  "deno_media_type",
@@ -1068,7 +1074,7 @@ dependencies = [
  "aes",
  "aes-gcm",
  "aes-kw",
- "base64",
+ "base64 0.22.1",
  "cbc",
  "const-oid",
  "ctr",
@@ -1130,7 +1136,7 @@ version = "0.227.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fd5aa4343bdb918c48673747007b2c687c2a9a75febd9dfd80757d17134f894"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bytes",
  "data-url",
  "deno_core",
@@ -1423,6 +1429,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "deno_websocket"
+version = "0.208.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97d79fef720769f533333f5c6a27b357457bb4ff8b935c1c376d9190067931b1"
+dependencies = [
+ "bytes",
+ "deno_core",
+ "deno_error",
+ "deno_net",
+ "deno_permissions",
+ "deno_tls",
+ "fastwebsockets",
+ "h2",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "once_cell",
+ "rustls-tokio-stream",
+ "serde",
+ "thiserror 2.0.12",
+ "tokio",
+]
+
+[[package]]
 name = "der"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1635,6 +1666,26 @@ name = "fastrand"
 version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8c02a5121d4ea3eb16a80748c74f5549a5665e4c21333c6098f283870fbdea6"
+
+[[package]]
+name = "fastwebsockets"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26da0c7b5cef45c521a6f9cdfffdfeb6c9f5804fbac332deb5ae254634c7a6be"
+dependencies = [
+ "base64 0.21.7",
+ "bytes",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "pin-project",
+ "rand 0.8.5",
+ "sha1",
+ "simdutf8",
+ "thiserror 1.0.50",
+ "tokio",
+ "utf-8",
+]
 
 [[package]]
 name = "ff"
@@ -4000,6 +4051,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "simdutf8"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
+
+[[package]]
 name = "siphasher"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4451,7 +4508,7 @@ version = "13.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8e7635afe1e1e798d61ff3107b8d27e437e61f243dd226a47fb10724693be66"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "dashmap",
  "indexmap 2.9.0",
  "once_cell",
@@ -4803,6 +4860,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tokio-tungstenite"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a9daff607c6d2bf6c16fd681ccb7eecc83e4e2cdc1ca067ffaadfca5de7f084"
+dependencies = [
+ "futures-util",
+ "log",
+ "tokio",
+ "tungstenite",
+]
+
+[[package]]
 name = "tokio-util"
 version = "0.7.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4837,7 +4906,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "axum",
- "base64",
+ "base64 0.22.1",
  "bytes",
  "h2",
  "http",
@@ -5003,6 +5072,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
+name = "tungstenite"
+version = "0.26.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4793cb5e56680ecbb1d843515b23b6de9a75eb04b66643e256a396d43be33c13"
+dependencies = [
+ "bytes",
+ "data-encoding",
+ "http",
+ "httparse",
+ "log",
+ "rand 0.9.0",
+ "sha1",
+ "thiserror 2.0.12",
+ "utf-8",
+]
+
+[[package]]
 name = "typed-arena"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5124,6 +5210,12 @@ dependencies = [
  "unic-ucd-ident",
  "url",
 ]
+
+[[package]]
+name = "utf-8"
+version = "0.7.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 
 [[package]]
 name = "utf16_iter"
@@ -5884,7 +5976,9 @@ dependencies = [
  "deno_url",
  "deno_web",
  "deno_webidl",
+ "deno_websocket",
  "env_logger",
+ "futures-util",
  "lassie",
  "log",
  "once_cell",
@@ -5895,6 +5989,7 @@ dependencies = [
  "serde_repr",
  "termcolor",
  "tokio",
+ "tokio-tungstenite",
 ]
 
 [[package]]

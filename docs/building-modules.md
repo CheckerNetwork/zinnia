@@ -197,9 +197,10 @@ individual methods in [MDN web docs](https://developer.mozilla.org/en-US/docs/We
 - [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto)
 - [crypto](https://developer.mozilla.org/en-US/docs/Web/API/crypto)
 
-#### WebSockets Standard (partial support)
+#### WebSockets Standard
 
 - [CloseEvent](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent)
+- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
 
 #### Web IDL Standard
 

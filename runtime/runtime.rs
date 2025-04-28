@@ -112,6 +112,11 @@ pub async fn run_js_module(
                 user_agent: bootstrap_options.agent_version.clone(),
                 ..Default::default()
             }),
+            deno_websocket::deno_websocket::init_ops_and_esm::<ZinniaPermissions>(
+                bootstrap_options.agent_version.clone(),
+                None, // root_cert_store_provider
+                None, // unsafely_ignore_certificate_errors:
+            ),
             deno_crypto::deno_crypto::init_ops_and_esm(bootstrap_options.rng_seed),
             deno_net::deno_net::init_ops_and_esm::<ZinniaPermissions>(None, None),
             deno_tls::deno_tls::init_ops_and_esm(),
