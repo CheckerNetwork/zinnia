@@ -187,3 +187,4 @@ import "ext:zinnia_runtime/test.js";
 import "ext:zinnia_runtime/vendored/asserts.bundle.js";
 import "ext:deno_web/16_image_data.js";
 import "ext:deno_web/10_filereader.js";
+import "ext:deno_websocket/02_websocketstream.js";

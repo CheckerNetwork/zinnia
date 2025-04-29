@@ -33,6 +33,7 @@ See [example modules](../examples) for more advanced examples.
 ## Table of Contents
 
 - [Importing JavaScript Modules](#importing-javascript-modules)
+- [Working with WebAssembly](#working-with-webassembly)
 - [Platform APIs](#platform-apis)
 - [Testing Guide](#testing-guide)
 
@@ -84,6 +85,18 @@ import { format } from "../lib.js";
 // This will be rejected
 import * as code from "../../other/code.js";
 ```
+
+## Working with WebAssembly
+
+Zinnia can directly import functions exported by WebAssembly modules.
+
+```js
+import { add } from "./math.wasm";
+console.log(add(1, 2));
+```
+
+We are looking for feedback from the community to improve the WASM support. Join the discussion on
+GitHub in [zinnia#74](https://github.com/CheckerNetwork/zinnia/issues/74).
 
 ## Platform APIs
 
@@ -197,9 +210,10 @@ individual methods in [MDN web docs](https://developer.mozilla.org/en-US/docs/We
 - [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto)
 - [crypto](https://developer.mozilla.org/en-US/docs/Web/API/crypto)
 
-#### WebSockets Standard (partial support)
+#### WebSockets Standard
 
 - [CloseEvent](https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent)
+- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
 
 #### Web IDL Standard
 
@@ -223,12 +237,6 @@ Tracking issue: n/a
 - [Cache](https://developer.mozilla.org/en-US/docs/Web/API/Cache)
 - [Worker](https://developer.mozilla.org/en-US/docs/Web/API/Worker)
 - [caches](https://developer.mozilla.org/en-US/docs/Web/API/caches)
-
-#### WebSockets Standard
-
-Tracking issue: n/a
-
-- [WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
 
 #### Other
 
