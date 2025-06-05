@@ -27,7 +27,6 @@ import * as messagePort from "ext:deno_web/13_message_port.js";
 import * as webidl from "ext:deno_webidl/00_webidl.js";
 import { DOMException } from "ext:deno_web/01_dom_exception.js";
 import * as abortSignal from "ext:deno_web/03_abort_signal.js";
-import * as httpClient from "ext:deno_fetch/22_http_client.js";
 
 import * as globalInterfaces from "ext:deno_web/04_global_interfaces.js";
 
@@ -119,7 +118,6 @@ const windowOrWorkerGlobalScope = {
   structuredClone: core.propWritable(messagePort.structuredClone),
   // Branding as a WebIDL object
   [webidl.brand]: core.propNonEnumerable(webidl.brand),
-  createHttpClient: core.propWritable(httpClient.createHttpClient),
 };
 
 const mainRuntimeGlobalProperties = {
