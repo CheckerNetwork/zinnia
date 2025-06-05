@@ -9,4 +9,3 @@ test("Zinnia.createHttpClient", async () => {
   const res = await fetch("https://example.com/", { client });
   assertEquals(res.status, 200);
 });
-

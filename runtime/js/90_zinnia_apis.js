@@ -7,7 +7,6 @@ import { inspect } from "ext:deno_console/01_console.js";
 import { versions } from "ext:zinnia_runtime/01_version.ts";
 import * as httpClient from "ext:deno_fetch/22_http_client.js";
 
-
 const zinniaNs = ObjectCreate(null);
 
 const activityApi = ObjectCreate(null);
