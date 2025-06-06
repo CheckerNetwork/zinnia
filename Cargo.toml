@@ -25,7 +25,7 @@ serde_repr = "0.1.20"
 tokio = { version = "1.45.1", features = ["fs", "rt", "macros"] }
 
 # workspace-local
-zinnia_runtime = { version = "0.23.0", path = "./runtime" }
+zinnia_runtime = { version = "0.24.0", path = "./runtime" }
 
 [profile.release]
 codegen-units = 1
