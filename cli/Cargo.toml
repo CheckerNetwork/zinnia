@@ -1,6 +1,6 @@
 [package]
 name = "zinnia"
-version = "0.23.0"
+version = "0.24.1"
 authors.workspace = true
 default-run = "zinnia"
 edition.workspace = true
