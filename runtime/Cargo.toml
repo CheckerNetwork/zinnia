@@ -14,21 +14,21 @@ path = "lib.rs"
 [dependencies]
 console_static_text.workspace = true
 chrono = { version= "0.4.41", default-features = false, features = [ "clock", "std" ] }
-deno_ast = { version = "0.46.6", features = ["transpiling"] }
-deno_console = "0.203.0"
+deno_ast = { version = "0.48.0", features = ["transpiling"] }
+deno_console = "0.204.0"
 deno_core.workspace = true
-deno_crypto = "0.217.0"
-deno_error = "0.5.6"
-deno_fetch = "0.227.0"
-deno_net = "0.195.0"
-deno_permissions = "0.62.0"
-deno_telemetry = "0.25.0"
+deno_crypto = "0.219.0"
+deno_error = "0.6.1"
+deno_fetch = "0.229.0"
+deno_net = "0.197.0"
+deno_permissions = "0.64.0"
+deno_telemetry = "0.27.0"
 deno_terminal = "0.2.2"
-deno_tls = "0.190.0"
-deno_url = "0.203.0"
-deno_web = "0.234.0"
-deno_webidl = "0.203.0"
-deno_websocket = "0.208.0"
+deno_tls = "0.192.0"
+deno_url = "0.205.0"
+deno_web = "0.236.0"
+deno_webidl = "0.206.0"
+deno_websocket = "0.210.0"
 lassie = "0.10.2"
 # lassie = { git = "https://github.com/filecoin-station/rusty-lassie.git" }
 log.workspace = true
