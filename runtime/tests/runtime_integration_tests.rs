@@ -21,11 +21,7 @@ macro_rules! js_tests(
     ( $name:ident ) => {
     #[tokio::test]
     async fn $name() -> Result<(), AnyError> {
-        let (_activities, run_error) = run_js_test_file(&format!("{}.js", stringify!($name))).await?;
-        if let Some(err) = run_error {
-            return Err(err);
-        }
-
+        run_js_test_file(&format!("{}.js", stringify!($name))).await?;
         Ok(())
     }
     };
@@ -33,10 +29,7 @@ macro_rules! js_tests(
     ( $name:ident check_activity) => {
     #[tokio::test]
     async fn $name() -> Result<(), AnyError> {
-        let (activities, run_error) = run_js_test_file(&format!("{}.js", stringify!($name))).await?;
-        if let Some(err) = run_error {
-            return Err(err);
-        }
+        let activities = run_js_test_file(&format!("{}.js", stringify!($name))).await?;
 
         let actual_output = format_recorded_activities(&activities);
         let expected_output = load_activity_log(&format!("{}.activity.txt", stringify!($name)));
@@ -50,10 +43,7 @@ macro_rules! test_runner_tests(
     ( $name:ident ) => {
     #[tokio::test]
     async fn $name() -> Result<(), AnyError> {
-        let (activities, run_error) = run_js_test_file(&format!("test_runner_tests/{}.js", stringify!($name))).await?;
-        if let Some(err) = run_error {
-            return Err(err);
-        }
+        let activities = run_js_test_file(&format!("test_runner_tests/{}.js", stringify!($name))).await?;
 
         let actual_output = format_test_activities(&activities);
         let expected_output = load_activity_log(&format!("test_runner_tests/{}.activity.txt", stringify!($name)));
@@ -66,12 +56,15 @@ macro_rules! test_runner_tests(
     ( $name:ident expect_failure ) => {
         #[tokio::test]
         async fn $name() -> Result<(), AnyError> {
-            let (activities, run_error) = run_js_test_file(&format!("test_runner_tests/{}.js", stringify!($name))).await?;
+            let result = run_js_test_file(&format!("test_runner_tests/{}.js", stringify!($name))).await;
 
-            match run_error {
-                None => return Err(anyhow!("The test runner was expected to throw an error. Success was reported instead.")),
-                Some(err) => assert_test_runner_failure(err),
-            }
+            let activities = match result {
+                Ok(_) => return Err(anyhow!("The test runner was expected to throw an error. Success was reported instead.")),
+                Err(failure) => {
+                    assert_test_runner_failure(failure.error);
+                    failure.activities
+                },
+            };
 
             let actual_output = format_test_activities(&activities);
             let expected_output = load_activity_log(&format!("test_runner_tests/{}.activity.txt", stringify!($name)));
@@ -99,10 +92,15 @@ test_runner_tests!(failing_tests expect_failure);
 
 #[tokio::test]
 async fn typescript_stack_trace_test() -> Result<(), AnyError> {
-    let (_, run_error) = run_js_test_file("typescript_fixtures/typescript_stack_trace.ts").await?;
-    let error = run_error.ok_or_else(|| {
-        anyhow!("The script was expected to throw an error. Success was reported instead.")
-    })?;
+    let result = run_js_test_file("typescript_fixtures/typescript_stack_trace.ts").await;
+    let error = match result {
+        Ok(_) => {
+            return Err(anyhow!(
+                "The script was expected to throw an error. Success was reported instead."
+            ))
+        }
+        Err(err) => err.error,
+    };
 
     if let Some(CoreError::Js(e)) = any_and_jserrorbox_downcast_ref::<CoreError>(&error) {
         let actual_error = format_js_error(e);
@@ -129,11 +127,7 @@ const error: Error = new Error(); throw error;
 
 #[tokio::test]
 async fn source_code_paths_when_no_module_root() -> Result<(), AnyError> {
-    let (activities, run_error) =
-        run_js_test_file_with_module_root("print_source_code_paths.js", None).await?;
-    if let Some(err) = run_error {
-        return Err(err);
-    }
+    let activities = run_js_test_file_with_module_root("print_source_code_paths.js", None).await?;
 
     let base_dir = get_base_dir();
     let dirname = base_dir.to_str().unwrap().to_string();
@@ -161,11 +155,8 @@ async fn source_code_paths_when_no_module_root() -> Result<(), AnyError> {
 #[tokio::test]
 async fn source_code_paths_when_inside_module_root() -> Result<(), AnyError> {
     let module_root = Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")));
-    let (activities, run_error) =
+    let activities =
         run_js_test_file_with_module_root("print_source_code_paths.js", module_root).await?;
-    if let Some(err) = run_error {
-        return Err(err);
-    }
 
     let base_dir = get_base_dir();
     let dirname = base_dir.to_str().unwrap().to_string();
@@ -208,14 +199,38 @@ async fn source_code_paths_when_inside_module_root() -> Result<(), AnyError> {
 }
 
 // Run all tests in a single JS file
-async fn run_js_test_file(name: &str) -> Result<(Vec<String>, Option<AnyError>), AnyError> {
+async fn run_js_test_file(name: &str) -> Result<Vec<String>, RunFailure> {
     run_js_test_file_with_module_root(name, None).await
+}
+
+#[derive(Debug)]
+struct RunFailure {
+    error: AnyError,
+    activities: Vec<String>,
+}
+
+impl RunFailure {
+    fn new(error: AnyError, activities: Vec<String>) -> Self {
+        Self { error, activities }
+    }
+}
+
+impl From<AnyError> for RunFailure {
+    fn from(err: AnyError) -> Self {
+        RunFailure::new(err, vec![])
+    }
+}
+
+impl From<RunFailure> for AnyError {
+    fn from(err: RunFailure) -> Self {
+        err.error
+    }
 }
 
 async fn run_js_test_file_with_module_root(
     name: &str,
     module_root: Option<PathBuf>,
-) -> Result<(Vec<String>, Option<AnyError>), AnyError> {
+) -> Result<Vec<String>, RunFailure> {
     let _ = env_logger::builder().is_test(true).try_init();
 
     let mut full_path = get_base_dir();
@@ -224,7 +239,8 @@ async fn run_js_test_file_with_module_root(
     let main_module = deno_core::resolve_path(
         &full_path.to_string_lossy(),
         &std::env::current_dir().context("unable to get current working directory")?,
-    )?;
+    )
+    .map_err(AnyError::from)?;
     let reporter = Rc::new(RecordingReporter::new());
     let config = BootstrapOptions::new(
         format!("zinnia_runtime_tests/{}", env!("CARGO_PKG_VERSION")),
@@ -233,11 +249,11 @@ async fn run_js_test_file_with_module_root(
         module_root,
     );
     let run_result = run_js_module(&main_module, &config).await;
-    let events = reporter.events.take();
+    let activities = reporter.events.take();
 
     match run_result {
-        Ok(()) => Ok((events, None)),
-        Err(err) => Ok((events, Some(err))),
+        Ok(()) => Ok(activities),
+        Err(err) => Err(RunFailure::new(err, activities)),
     }
 }
 
