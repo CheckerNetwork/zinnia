@@ -352,6 +352,12 @@ The version of Zinnia runtime, e.g. `"0.11.0"`.
 
 The version of V8 engine, e.g. `"11.5.150.2"`.
 
+#### `Zinnia.createHttpClient`
+
+Create a custom HttpClient to use with fetch.
+
+See [Deno.createHttpClient() docs](https://docs.deno.com/api/deno/~/Deno.createHttpClient) for more details.
+
 ## Testing Guide
 
 Zinnia provides lightweight tooling for writing and running automated tests.

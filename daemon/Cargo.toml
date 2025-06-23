@@ -1,6 +1,6 @@
 [package]
 name = "zinniad"
-version = "0.23.0"
+version = "0.24.1"
 authors.workspace = true
 default-run = "zinniad"
 edition.workspace = true
@@ -15,7 +15,7 @@ doc = false
 
 [dependencies]
 atomicwrites = "0.4.4"
-clap = { version = "4.5.37", features = ["derive", "env"] }
+clap = { version = "4.5.40", features = ["derive", "env"] }
 env_logger.workspace = true
 log.workspace = true
 serde.workspace = true
@@ -27,7 +27,7 @@ zinnia_runtime = { workspace = true }
 assert_cmd = { workspace = true }
 assert_fs = { workspace = true }
 pretty_assertions = { workspace = true }
-tempfile = "3.19.1"
+tempfile = "3.20.0"
 
 [lints]
 workspace = true

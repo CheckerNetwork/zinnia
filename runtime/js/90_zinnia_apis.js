@@ -5,6 +5,7 @@ import { op_info_activity, op_error_activity, op_job_completed, op_zinnia_log } 
 
 import { inspect } from "ext:deno_console/01_console.js";
 import { versions } from "ext:zinnia_runtime/01_version.ts";
+import * as httpClient from "ext:deno_fetch/22_http_client.js";
 
 const zinniaNs = ObjectCreate(null);
 
@@ -19,6 +20,7 @@ ObjectDefineProperties(zinniaNs, {
   jobCompleted: core.propReadOnly(reportJobCompleted),
   versions: core.propReadOnly(versions),
   inspect: core.propReadOnly(inspect),
+  createHttpClient: core.propWritable(httpClient.createHttpClient),
 });
 
 function reportInfoActivity(msg) {
