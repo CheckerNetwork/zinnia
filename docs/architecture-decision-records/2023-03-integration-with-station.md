@@ -198,11 +198,9 @@ These APIs will behave differently when running a module via `zinnia` CLI in dev
 1. Don't build a new binary, bundle the existing `zinnia` CLI inside the Station.
 
    Pros:
-
    - Less work to ship the first version. Less yak-shaving like setting up CI/CD workflows.
 
    Cons:
-
    - Zinnia modules cannot share libp2p & IPFS resources (network connection, peer address book,
      block store).
 
@@ -216,12 +214,10 @@ These APIs will behave differently when running a module via `zinnia` CLI in dev
    saturn-l2 module uses this model.)
 
    Pros:
-
    - We already have code in Station to deal with this.
    - Less cluttered `stdout`
 
    Cons:
-
    - More complex implementation in Zinnia for little benefits. Since `zinniad` routes all
      `console.log` messages to `stderr`, no humans should be reading `stdout`, therefore extra
      clutter does not matter.
@@ -254,7 +250,6 @@ These APIs will behave differently when running a module via `zinnia` CLI in dev
    `XDG_STATE_HOME/zinnia` as the default value.
 
    Few more thoughts:
-
    - `XDG_STATE_HOME` is specific to Linux. Windows uses something like `%LOCALAPPDATA%`, macOS
      something else.
 
