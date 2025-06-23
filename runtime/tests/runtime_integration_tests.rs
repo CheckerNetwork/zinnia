@@ -240,7 +240,7 @@ async fn run_js_test_file_with_module_root(
         &full_path.to_string_lossy(),
         &std::env::current_dir().context("unable to get current working directory")?,
     )
-    .map_err(|err| AnyError::from(err))?;
+    .map_err(AnyError::from)?;
     let reporter = Rc::new(RecordingReporter::new());
     let config = BootstrapOptions::new(
         format!("zinnia_runtime_tests/{}", env!("CARGO_PKG_VERSION")),
