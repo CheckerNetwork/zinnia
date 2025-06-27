@@ -14,6 +14,8 @@
 Zinnia is a sandboxed and resource-limited runtime for distributed workers. This crate provides the
 `zinnia` executable to run modules locally, e.g. while developing.
 
+**CAUTION: This crate is no longer maintained.**
+
 ## Installation
 
 You can download the `zinnia` binary from

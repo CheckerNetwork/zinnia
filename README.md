@@ -13,6 +13,9 @@
 >
 > Powering 🛰️ [Filecoin Station](https://github.com/filecoin-station/filecoin-station).
 
+> [!CAUTION]
+> **This project is no longer maintained.**
+
 ## Installation
 
 See [CLI Installation](./cli/README.md#installation).

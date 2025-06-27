@@ -14,3 +14,5 @@
 
 Zinnia is a runtime for Filecoin Station modules. This crate provides the runtime including all
 platform APIs.
+
+**CAUTION: This crate is no longer maintained.**

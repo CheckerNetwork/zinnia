@@ -14,6 +14,8 @@
 Zinnia is a sandboxed and resource-limited runtime for distributed workers. This crate provides a
 daemon to run Zinnia Modules inside Filecoin Station.
 
+**CAUTION: This crate is no longer maintained.**
+
 ## Installation
 
 You can download the `zinniad` binary from
